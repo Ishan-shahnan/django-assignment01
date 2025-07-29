@@ -1,0 +1,102 @@
+{% extends 'events/base.html' %}
+{% load static %}
+{% block title %}All Events - Shan Event Management{% endblock %}
+{% block content %}
+<!-- Header Section -->
+<div class="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-8 rounded-xl shadow-lg mb-8">
+    <div class="text-center">
+        <h1 class="text-4xl font-bold mb-4">All Events</h1>
+        <p class="text-xl opacity-90">Discover and explore all our events</p>
+    </div>
+</div>
+
+<!-- Statistics Section -->
+<div class="bg-green-50 p-6 rounded-xl shadow-md mb-8 border border-green-200">
+    <h2 class="text-2xl font-bold text-green-800 mb-4 text-center">Event Statistics</h2>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="bg-white p-4 rounded-lg shadow-md text-center">
+            <div class="text-3xl font-bold text-blue-600">{{ events.count }}</div>
+            <div class="text-gray-600">Total Events</div>
+        </div>
+        <div class="bg-white p-4 rounded-lg shadow-md text-center">
+            <div class="text-3xl font-bold text-green-600">{{ total_participants|default:0 }}</div>
+            <div class="text-gray-600">Total Participants</div>
+        </div>
+        <div class="bg-white p-4 rounded-lg shadow-md text-center">
+            <div class="text-3xl font-bold text-purple-600">{{ categories.count }}</div>
+            <div class="text-gray-600">Categories</div>
+        </div>
+    </div>
+</div>
+
+<!-- Search Section -->
+<div class="bg-blue-100 p-6 rounded-xl shadow-md mb-8 border border-blue-200">
+    <h2 class="text-2xl font-bold text-blue-800 mb-4 text-center">Search & Filter Events</h2>
+    <form method="get" action="" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+        <input type="text" name="search" placeholder="Search events..." value="{{ request.GET.search }}" class="p-3 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent">
+        <select name="category" class="p-3 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent">
+            <option value="">All Categories</option>
+            {% for category in categories %}
+                <option value="{{ category.id }}" {% if request.GET.category == category.id|stringformat:"s" %}selected{% endif %}>{{ category.name }}</option>
+            {% endfor %}
+        </select>
+        <input type="date" name="date" value="{{ request.GET.date }}" placeholder="Specific Date" class="p-3 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent">
+        <input type="date" name="start_date" value="{{ request.GET.start_date }}" placeholder="Start Date" class="p-3 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent">
+        <input type="date" name="end_date" value="{{ request.GET.end_date }}" placeholder="End Date" class="p-3 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent">
+        <button type="submit" class="bg-blue-600 text-white p-3 rounded-lg hover:bg-blue-700 transition duration-300">Search</button>
+    </form>
+    
+    <!-- Clear Filters -->
+    {% if request.GET %}
+    <div class="mt-4 text-center">
+        <a href="{% url 'events:events' %}" class="text-blue-600 hover:text-blue-800 underline">Clear all filters</a>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Events Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+    {% for event in events %}
+    <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200 transform hover:scale-105 transition duration-300 ease-in-out">
+        <div class="w-full h-56 bg-cover bg-center rounded-t-xl" style="background-image: url('{% static 'images/event.jpeg' %}');">
+            <div class="w-full h-full bg-black bg-opacity-40 flex items-center justify-center">
+                <h3 class="text-white text-2xl font-bold text-center px-4">{{ event.name }}</h3>
+            </div>
+        </div>
+        <div class="p-6">
+            <h3 class="text-2xl font-bold text-gray-900 mb-2">{{ event.name }}</h3>
+            <p class="text-gray-700 mb-4 line-clamp-3">{{ event.description }}</p>
+            <div class="space-y-2 mb-4">
+                <p class="text-gray-600 text-sm">
+                    <span class="font-semibold text-blue-600">Date:</span> {{ event.date }}
+                </p>
+                <p class="text-gray-600 text-sm">
+                    <span class="font-semibold text-blue-600">Time:</span> {{ event.time }}
+                </p>
+                <p class="text-gray-600 text-sm">
+                    <span class="font-semibold text-blue-600">Location:</span> {{ event.location }}
+                </p>
+                <p class="text-gray-600 text-sm">
+                    <span class="font-semibold text-blue-600">Category:</span> {{ event.category.name }}
+                </p>
+                <p class="text-gray-600 text-sm">
+                    <span class="font-semibold text-green-600">Participants:</span> {{ event.participants.count }}
+                </p>
+            </div>
+            <a href="{% url 'events:detail' event.pk %}" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-300 w-full text-center block font-semibold">View Details</a>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-span-3 text-center py-12">
+        <div class="bg-white rounded-xl shadow-lg p-8 border border-gray-200">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-24 w-24 mx-auto text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+            </svg>
+            <h3 class="text-2xl font-bold text-gray-600 mb-2">No Events Found</h3>
+            <p class="text-gray-500 mb-6">No events match your search criteria.</p>
+            <a href="{% url 'events:events' %}" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition duration-300">Clear Filters</a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %} 

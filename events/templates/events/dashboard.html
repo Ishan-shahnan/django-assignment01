@@ -1,0 +1,408 @@
+{% extends 'events/base.html' %}
+{% load static %}
+{% block title %}Dashboard - Shan Event Management{% endblock %}
+{% block content %}
+<!-- Header Section -->
+<div class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white p-8 rounded-xl shadow-lg mb-8">
+    <div class="text-center">
+        <h1 class="text-4xl font-bold mb-4">Admin Dashboard</h1>
+        <p class="text-xl opacity-90">Manage your events, participants, and categories</p>
+        <div class="mt-4 p-3 bg-yellow-600 rounded-lg inline-block">
+            <p class="text-sm font-semibold">🔧 Management Area - Create, Edit & Delete Events</p>
+        </div>
+    </div>
+</div>
+
+<!-- Messages Section -->
+{% if messages %}
+<div class="mb-8">
+    {% for message in messages %}
+    <div class="p-4 rounded-lg {% if message.tags == 'success' %}bg-green-100 text-green-800 border border-green-200{% elif message.tags == 'error' %}bg-red-100 text-red-800 border border-red-200{% else %}bg-blue-100 text-blue-800 border border-blue-200{% endif %}">
+        {{ message }}
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<!-- Statistics Section -->
+<div class="bg-green-50 p-8 rounded-xl shadow-md mb-8 border border-green-200">
+    <h2 class="text-3xl font-bold text-green-800 mb-6 text-center">System Statistics</h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Row 1 -->
+        <div class="bg-white p-6 rounded-lg shadow-md text-center cursor-pointer hover:shadow-lg transition duration-300" onclick="filterEvents('all')">
+            <div class="text-4xl font-bold text-blue-600 mb-2">{{ total_events|default:0 }}</div>
+            <div class="text-gray-600 font-semibold">Total Events</div>
+        </div>
+        <div class="bg-white p-6 rounded-lg shadow-md text-center cursor-pointer hover:shadow-lg transition duration-300" onclick="filterEvents('upcoming')">
+            <div class="text-4xl font-bold text-green-600 mb-2">{{ upcoming_events_count|default:0 }}</div>
+            <div class="text-gray-600 font-semibold">Upcoming Events</div>
+        </div>
+        
+        <!-- Row 2 -->
+        <div class="bg-white p-6 rounded-lg shadow-md text-center cursor-pointer hover:shadow-lg transition duration-300" onclick="filterEvents('past')">
+            <div class="text-4xl font-bold text-orange-600 mb-2">{{ past_events_count|default:0 }}</div>
+            <div class="text-gray-600 font-semibold">Past Events</div>
+        </div>
+        <div class="bg-white p-6 rounded-lg shadow-md text-center">
+            <div class="text-4xl font-bold text-purple-600 mb-2">{{ total_participants|default:0 }}</div>
+            <div class="text-gray-600 font-semibold">Total Participants</div>
+        </div>
+        
+        <!-- Row 3 -->
+        <div class="bg-white p-6 rounded-lg shadow-md text-center">
+            <div class="text-4xl font-bold text-indigo-600 mb-2">{{ total_categories|default:0 }}</div>
+            <div class="text-gray-600 font-semibold">Categories</div>
+        </div>
+        <div class="bg-white p-6 rounded-lg shadow-md text-center cursor-pointer hover:shadow-lg transition duration-300" onclick="filterEvents('today')">
+            <div class="text-4xl font-bold text-red-600 mb-2">{{ todays_events.count }}</div>
+            <div class="text-gray-600 font-semibold">Today's Events</div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions Section -->
+<div class="bg-blue-50 p-6 rounded-xl shadow-md mb-8 border border-blue-200">
+    <h2 class="text-2xl font-bold text-blue-800 mb-4 text-center">Quick Actions</h2>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <a href="{% url 'events:add' %}" class="bg-green-600 text-white p-4 rounded-lg hover:bg-green-700 transition duration-300 text-center font-semibold">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+            </svg>
+            Add New Event
+        </a>
+        <a href="{% url 'events:participant_add' %}" class="bg-blue-600 text-white p-4 rounded-lg hover:bg-blue-700 transition duration-300 text-center font-semibold">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+            </svg>
+            Add Participant
+        </a>
+        <a href="{% url 'events:category_add' %}" class="bg-purple-600 text-white p-4 rounded-lg hover:bg-purple-700 transition duration-300 text-center font-semibold">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+            </svg>
+            Add Category
+        </a>
+    </div>
+</div>
+
+<!-- Today's Events Section -->
+<div class="bg-yellow-50 p-8 rounded-xl shadow-md mb-8 border border-yellow-200">
+    <h2 class="text-3xl font-bold text-yellow-800 mb-6 text-center">Today's Events</h2>
+    
+    {% if todays_events %}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for event in todays_events %}
+        <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
+            <div class="w-full h-40 bg-cover bg-center" style="background-image: url('{% static 'images/event.jpeg' %}');">
+                <div class="w-full h-full bg-black bg-opacity-40 flex items-center justify-center">
+                    <h3 class="text-white text-xl font-bold text-center px-4">{{ event.name }}</h3>
+                </div>
+            </div>
+            <div class="p-6">
+                <h3 class="text-xl font-bold text-gray-900 mb-2">{{ event.name }}</h3>
+                <p class="text-gray-700 mb-4 line-clamp-3">{{ event.description }}</p>
+                <div class="space-y-2 text-sm mb-4">
+                    <p><span class="font-semibold text-blue-600">Time:</span> {{ event.time }}</p>
+                    <p><span class="font-semibold text-blue-600">Location:</span> {{ event.location }}</p>
+                    <p><span class="font-semibold text-purple-600">Category:</span> {{ event.category.name }}</p>
+                    <p><span class="font-semibold text-green-600">Participants:</span> {{ event.participants.count }}</p>
+                </div>
+                <div class="flex space-x-2">
+                    <a href="{% url 'events:detail' event.pk %}" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-300 text-sm">View Details</a>
+                    <a href="{% url 'events:edit' event.pk %}" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition duration-300 text-sm">Edit</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-12">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-24 w-24 mx-auto text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+        </svg>
+        <h3 class="text-2xl font-bold text-gray-600 mb-2">No Events Today</h3>
+        <p class="text-gray-500 mb-6">No events are scheduled for today.</p>
+        <a href="{% url 'events:add' %}" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition duration-300">Add Event</a>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Manage Events -->
+<div class="bg-blue-50 p-8 rounded-xl shadow-md mb-12 border border-blue-200">
+    <h2 class="text-3xl font-bold text-blue-800 mb-6 text-center">Manage Events</h2>
+    
+    <!-- Note about categories -->
+    {% if not categories %}
+    <div class="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded mb-6">
+        <strong>Note:</strong> You need to create at least one category before adding events. Please add a category first.
+    </div>
+    {% endif %}
+    
+    <form method="post" class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        {% csrf_token %}
+        <input type="hidden" name="form_type" value="event">
+        <div>
+            <label for="{{ event_form.name.id_for_label }}" class="block text-lg font-medium text-gray-700 mb-2">Event Name</label>
+            {{ event_form.name }}
+            {% if event_form.name.errors %}
+                <div class="text-red-600 text-sm mt-1">{{ event_form.name.errors.0 }}</div>
+            {% endif %}
+        </div>
+        <div>
+            <label for="{{ event_form.description.id_for_label }}" class="block text-lg font-medium text-gray-700 mb-2">Description</label>
+            {{ event_form.description }}
+            {% if event_form.description.errors %}
+                <div class="text-red-600 text-sm mt-1">{{ event_form.description.errors.0 }}</div>
+            {% endif %}
+        </div>
+        <div>
+            <label for="{{ event_form.date.id_for_label }}" class="block text-lg font-medium text-gray-700 mb-2">Date</label>
+            {{ event_form.date }}
+            {% if event_form.date.errors %}
+                <div class="text-red-600 text-sm mt-1">{{ event_form.date.errors.0 }}</div>
+            {% endif %}
+        </div>
+        <div>
+            <label for="{{ event_form.time.id_for_label }}" class="block text-lg font-medium text-gray-700 mb-2">Time</label>
+            {{ event_form.time }}
+            {% if event_form.time.errors %}
+                <div class="text-red-600 text-sm mt-1">{{ event_form.time.errors.0 }}</div>
+            {% endif %}
+        </div>
+        <div>
+            <label for="{{ event_form.location.id_for_label }}" class="block text-lg font-medium text-gray-700 mb-2">Location</label>
+            {{ event_form.location }}
+            {% if event_form.location.errors %}
+                <div class="text-red-600 text-sm mt-1">{{ event_form.location.errors.0 }}</div>
+            {% endif %}
+        </div>
+        <div>
+            <label for="{{ event_form.category.id_for_label }}" class="block text-lg font-medium text-gray-700 mb-2">Category</label>
+            {{ event_form.category }}
+            {% if event_form.category.errors %}
+                <div class="text-red-600 text-sm mt-1">{{ event_form.category.errors.0 }}</div>
+            {% endif %}
+        </div>
+        <button type="submit" class="col-span-1 md:col-span-2 bg-green-600 text-white p-4 rounded-lg hover:bg-green-700 transition duration-300 ease-in-out font-semibold text-lg shadow-lg transform hover:scale-105" {% if not categories %}disabled{% endif %}>Add Event</button>
+    </form>
+
+    <h3 class="text-2xl font-bold text-gray-800 mb-4">Current Events</h3>
+    <div class="overflow-x-auto">
+        <table class="min-w-full bg-white rounded-lg shadow-md">
+            <thead>
+                <tr class="bg-blue-100 border-b border-blue-200">
+                    <th class="py-3 px-4 text-left text-sm font-semibold text-gray-700 rounded-tl-lg">Name</th>
+                    <th class="py-3 px-4 text-left text-sm font-semibold text-gray-700">Date</th>
+                    <th class="py-3 px-4 text-left text-sm font-semibold text-gray-700">Location</th>
+                    <th class="py-3 px-4 text-left text-sm font-semibold text-gray-700">Category</th>
+                    <th class="py-3 px-4 text-left text-sm font-semibold text-gray-700">Participants</th>
+                    <th class="py-3 px-4 text-left text-sm font-semibold text-gray-700 rounded-tr-lg">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for event in events %}
+                <tr class="border-b border-gray-200 hover:bg-gray-50">
+                    <td class="py-3 px-4">{{ event.name }}</td>
+                    <td class="py-3 px-4">{{ event.date }}</td>
+                    <td class="py-3 px-4">{{ event.location }}</td>
+                    <td class="py-3 px-4">{{ event.category.name }}</td>
+                    <td class="py-3 px-4">{{ event.participants.count }}</td>
+                    <td class="py-3 px-4">
+                        <div class="flex space-x-2">
+                            <a href="{% url 'events:edit' event.pk %}" class="bg-blue-500 text-white p-2 rounded-md hover:bg-blue-600 transition duration-300 text-sm">Edit</a>
+                            <a href="{% url 'events:delete' event.pk %}" class="bg-red-500 text-white p-2 rounded-md hover:bg-red-600 transition duration-300 text-sm">Delete</a>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="py-8 text-center text-gray-500">No events found</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Manage Participants -->
+<div class="bg-blue-50 p-8 rounded-xl shadow-md mb-12 border border-blue-200">
+    <h2 class="text-3xl font-bold text-blue-800 mb-6 text-center">Manage Participants</h2>
+    
+    <!-- Note about events -->
+    {% if not events %}
+    <div class="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded mb-6">
+        <strong>Note:</strong> You need to create at least one event before adding participants. Please add an event first.
+    </div>
+    {% endif %}
+    
+    <form method="post" class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        {% csrf_token %}
+        <input type="hidden" name="form_type" value="participant">
+        <div>
+            <label for="{{ participant_form.name.id_for_label }}" class="block text-lg font-medium text-gray-700 mb-2">Name</label>
+            {{ participant_form.name }}
+            {% if participant_form.name.errors %}
+                <div class="text-red-600 text-sm mt-1">{{ participant_form.name.errors.0 }}</div>
+            {% endif %}
+        </div>
+        <div>
+            <label for="{{ participant_form.email.id_for_label }}" class="block text-lg font-medium text-gray-700 mb-2">Email</label>
+            {{ participant_form.email }}
+            {% if participant_form.email.errors %}
+                <div class="text-red-600 text-sm mt-1">{{ participant_form.email.errors.0 }}</div>
+            {% endif %}
+        </div>
+        <div>
+            <label for="{{ participant_form.events.id_for_label }}" class="block text-lg font-medium text-gray-700 mb-2">Events</label>
+            {{ participant_form.events }}
+            {% if participant_form.events.errors %}
+                <div class="text-red-600 text-sm mt-1">{{ participant_form.events.errors.0 }}</div>
+            {% endif %}
+        </div>
+        <button type="submit" class="col-span-1 md:col-span-3 bg-green-600 text-white p-4 rounded-lg hover:bg-green-700 transition duration-300 ease-in-out font-semibold text-lg shadow-lg transform hover:scale-105" {% if not events %}disabled{% endif %}>Add Participant</button>
+    </form>
+
+    <h3 class="text-2xl font-bold text-gray-800 mb-4">Current Participants</h3>
+    <div class="overflow-x-auto">
+        <table class="min-w-full bg-white rounded-lg shadow-md">
+            <thead>
+                <tr class="bg-blue-100 border-b border-blue-200">
+                    <th class="py-3 px-4 text-left text-sm font-semibold text-gray-700 rounded-tl-lg">Name</th>
+                    <th class="py-3 px-4 text-left text-sm font-semibold text-gray-700">Email</th>
+                    <th class="py-3 px-4 text-left text-sm font-semibold text-gray-700">Events</th>
+                    <th class="py-3 px-4 text-left text-sm font-semibold text-gray-700 rounded-tr-lg">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for participant in participants %}
+                <tr class="border-b border-gray-200 hover:bg-gray-50">
+                    <td class="py-3 px-4">{{ participant.name }}</td>
+                    <td class="py-3 px-4">{{ participant.email }}</td>
+                    <td class="py-3 px-4">
+                        {% for event in participant.events.all %}
+                            {{ event.name }}{% if not forloop.last %}, {% endif %}
+                        {% endfor %}
+                    </td>
+                    <td class="py-3 px-4">
+                        <div class="flex space-x-2">
+                            <a href="{% url 'events:participant_edit' participant.pk %}" class="bg-blue-500 text-white p-2 rounded-md hover:bg-blue-600 transition duration-300 text-sm">Edit</a>
+                            <a href="{% url 'events:participant_delete' participant.pk %}" class="bg-red-500 text-white p-2 rounded-md hover:bg-red-600 transition duration-300 text-sm">Delete</a>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="py-8 text-center text-gray-500">No participants found</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Manage Categories -->
+<div class="bg-blue-50 p-8 rounded-xl shadow-md border border-blue-200">
+    <h2 class="text-3xl font-bold text-blue-800 mb-6 text-center">Manage Categories</h2>
+    <form method="post" class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        {% csrf_token %}
+        <input type="hidden" name="form_type" value="category">
+        <div>
+            <label for="{{ category_form.name.id_for_label }}" class="block text-lg font-medium text-gray-700 mb-2">Category Name</label>
+            {{ category_form.name }}
+            {% if category_form.name.errors %}
+                <div class="text-red-600 text-sm mt-1">{{ category_form.name.errors.0 }}</div>
+            {% endif %}
+        </div>
+        <div>
+            <label for="{{ category_form.description.id_for_label }}" class="block text-lg font-medium text-gray-700 mb-2">Description</label>
+            {{ category_form.description }}
+            {% if category_form.description.errors %}
+                <div class="text-red-600 text-sm mt-1">{{ category_form.description.errors.0 }}</div>
+            {% endif %}
+        </div>
+        <button type="submit" class="col-span-1 md:col-span-2 bg-green-600 text-white p-4 rounded-lg hover:bg-green-700 transition duration-300 ease-in-out font-semibold text-lg shadow-lg transform hover:scale-105">Add Category</button>
+    </form>
+
+    <h3 class="text-2xl font-bold text-gray-800 mb-4">Current Categories</h3>
+    <div class="overflow-x-auto">
+        <table class="min-w-full bg-white rounded-lg shadow-md">
+            <thead>
+                <tr class="bg-blue-100 border-b border-blue-200">
+                    <th class="py-3 px-4 text-left text-sm font-semibold text-gray-700 rounded-tl-lg">Name</th>
+                    <th class="py-3 px-4 text-left text-sm font-semibold text-gray-700">Description</th>
+                    <th class="py-3 px-4 text-left text-sm font-semibold text-gray-700 rounded-tr-lg">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for category in categories %}
+                <tr class="border-b border-gray-200 hover:bg-gray-50">
+                    <td class="py-3 px-4">{{ category.name }}</td>
+                    <td class="py-3 px-4">{{ category.description }}</td>
+                    <td class="py-3 px-4">
+                        <div class="flex space-x-2">
+                            <a href="{% url 'events:category_edit' category.pk %}" class="bg-blue-500 text-white p-2 rounded-md hover:bg-blue-600 transition duration-300 text-sm">Edit</a>
+                            <a href="{% url 'events:category_delete' category.pk %}" class="bg-red-500 text-white p-2 rounded-md hover:bg-red-600 transition duration-300 text-sm">Delete</a>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="3" class="py-8 text-center text-gray-500">No categories found</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- JavaScript for Interactive Dashboard -->
+<script>
+function filterEvents(filterType) {
+    // Get the events container
+    const eventsContainer = document.querySelector('.events-list');
+    if (!eventsContainer) return;
+    
+    // Get all event cards
+    const eventCards = eventsContainer.querySelectorAll('.event-card');
+    
+    // Show all events first
+    eventCards.forEach(card => {
+        card.style.display = 'block';
+    });
+    
+    // Apply filter based on type
+    switch(filterType) {
+        case 'upcoming':
+            // This would require server-side filtering, but for now we'll just show a message
+            alert('Upcoming events filter would be implemented with AJAX to fetch filtered data from the server.');
+            break;
+        case 'past':
+            alert('Past events filter would be implemented with AJAX to fetch filtered data from the server.');
+            break;
+        case 'today':
+            alert('Today\'s events are already shown in the dedicated section above.');
+            break;
+        case 'all':
+        default:
+            // Show all events (already done above)
+            break;
+    }
+    
+    // Update active filter indicator
+    document.querySelectorAll('.stat-card').forEach(card => {
+        card.classList.remove('ring-4', 'ring-blue-400');
+    });
+    
+    // Add active indicator to clicked card
+    event.target.closest('.stat-card').classList.add('ring-4', 'ring-blue-400');
+}
+
+// Add click handlers to stat cards
+document.addEventListener('DOMContentLoaded', function() {
+    const statCards = document.querySelectorAll('[onclick^="filterEvents"]');
+    statCards.forEach(card => {
+        card.classList.add('stat-card');
+    });
+});
+</script>
+{% endblock %} 
