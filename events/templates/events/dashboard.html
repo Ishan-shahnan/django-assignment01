@@ -2,7 +2,7 @@
 {% load static %}
 {% block title %}Dashboard - Shan Event Management{% endblock %}
 {% block content %}
-<!-- Header Section -->
+<!-- Header -->
 <div class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white p-8 rounded-xl shadow-lg mb-8">
     <div class="text-center">
         <h1 class="text-4xl font-bold mb-4">Admin Dashboard</h1>
@@ -13,7 +13,7 @@
     </div>
 </div>
 
-<!-- Messages Section -->
+<!-- Messages -->
 {% if messages %}
 <div class="mb-8">
     {% for message in messages %}
@@ -24,7 +24,7 @@
 </div>
 {% endif %}
 
-<!-- Statistics Section -->
+<!-- Statistics -->
 <div class="bg-green-50 p-8 rounded-xl shadow-md mb-8 border border-green-200">
     <h2 class="text-3xl font-bold text-green-800 mb-6 text-center">System Statistics</h2>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -60,7 +60,7 @@
     </div>
 </div>
 
-<!-- Quick Actions Section -->
+
 <div class="bg-blue-50 p-6 rounded-xl shadow-md mb-8 border border-blue-200">
     <h2 class="text-2xl font-bold text-blue-800 mb-4 text-center">Quick Actions</h2>
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -85,7 +85,7 @@
     </div>
 </div>
 
-<!-- Today's Events Section -->
+<!-- Today Events -->
 <div class="bg-yellow-50 p-8 rounded-xl shadow-md mb-8 border border-yellow-200">
     <h2 class="text-3xl font-bold text-yellow-800 mb-6 text-center">Today's Events</h2>
     
@@ -131,7 +131,7 @@
 <div class="bg-blue-50 p-8 rounded-xl shadow-md mb-12 border border-blue-200">
     <h2 class="text-3xl font-bold text-blue-800 mb-6 text-center">Manage Events</h2>
     
-    <!-- Note about categories -->
+    <!-- Note category -->
     {% if not categories %}
     <div class="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded mb-6">
         <strong>Note:</strong> You need to create at least one category before adding events. Please add a category first.
@@ -228,7 +228,7 @@
 <div class="bg-blue-50 p-8 rounded-xl shadow-md mb-12 border border-blue-200">
     <h2 class="text-3xl font-bold text-blue-800 mb-6 text-center">Manage Participants</h2>
     
-    <!-- Note about events -->
+    <!-- Note event -->
     {% if not events %}
     <div class="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded mb-6">
         <strong>Note:</strong> You need to create at least one event before adding participants. Please add an event first.
@@ -300,7 +300,7 @@
     </div>
 </div>
 
-<!-- Manage Categories -->
+<!-- Manage Category -->
 <div class="bg-blue-50 p-8 rounded-xl shadow-md border border-blue-200">
     <h2 class="text-3xl font-bold text-blue-800 mb-6 text-center">Manage Categories</h2>
     <form method="post" class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
@@ -355,25 +355,25 @@
     </div>
 </div>
 
-<!-- JavaScript for Interactive Dashboard -->
+<!-- JS Dashboard -->
 <script>
 function filterEvents(filterType) {
-    // Get the events container
+    //events container
     const eventsContainer = document.querySelector('.events-list');
     if (!eventsContainer) return;
     
-    // Get all event cards
+    //all event cards
     const eventCards = eventsContainer.querySelectorAll('.event-card');
     
-    // Show all events first
+    //all events first
     eventCards.forEach(card => {
         card.style.display = 'block';
     });
     
-    // Apply filter based on type
+    //filter
     switch(filterType) {
         case 'upcoming':
-            // This would require server-side filtering, but for now we'll just show a message
+            
             alert('Upcoming events filter would be implemented with AJAX to fetch filtered data from the server.');
             break;
         case 'past':
@@ -384,20 +384,20 @@ function filterEvents(filterType) {
             break;
         case 'all':
         default:
-            // Show all events (already done above)
+            
             break;
     }
     
-    // Update active filter indicator
+    
     document.querySelectorAll('.stat-card').forEach(card => {
         card.classList.remove('ring-4', 'ring-blue-400');
     });
     
-    // Add active indicator to clicked card
+    
     event.target.closest('.stat-card').classList.add('ring-4', 'ring-blue-400');
 }
 
-// Add click handlers to stat cards
+
 document.addEventListener('DOMContentLoaded', function() {
     const statCards = document.querySelectorAll('[onclick^="filterEvents"]');
     statCards.forEach(card => {
