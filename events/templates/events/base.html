@@ -5,8 +5,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Shan Event Management{% endblock %}</title>
-    <!-- tailwindcsss  -->
+    <!-- Tailwind CSS Local -->
     <link rel="stylesheet" href="{% static 'css/output.css' %}">
+    <!-- Fallback CDN if local CSS fails -->
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
         /* Custom styles for line-clamp if not using a plugin (Tailwind JIT includes it) */
         .line-clamp-2 {
@@ -31,7 +33,7 @@
         {% block content %}{% endblock %}
     </main>
 
-    <!-- footer -->
+    <!-- Footer Section -->
     <footer class="bg-gray-800 text-white p-8 mt-12 text-center rounded-t-lg shadow-inner">
         <div class="container mx-auto">
             <p>&copy; {% now "Y" %} Shan Event Management. All rights reserved.</p>

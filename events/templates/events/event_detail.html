@@ -11,7 +11,7 @@
 </div>
 
 <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
-    <!-- Event Header Image -->
+    <!-- Event Header with Image -->
     <div class="relative h-64 bg-gradient-to-r from-blue-600 to-purple-600">
         <img src="https://placehold.co/1200x400/60A5FA/FFFFFF?text={{ event.name|urlencode }}" alt="Event Image" class="w-full h-full object-cover">
         <div class="absolute inset-0 bg-black bg-opacity-40"></div>
@@ -24,12 +24,12 @@
     <!-- Event Details -->
     <div class="p-8">
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <!-- Content -->
+            <!-- Main Content -->
             <div class="lg:col-span-2">
                 <h2 class="text-2xl font-bold text-gray-800 mb-4">Event Description</h2>
                 <p class="text-gray-700 text-lg leading-relaxed mb-6">{{ event.description }}</p>
                 
-                <!-- Details -->
+                <!-- Event Details -->
                 <div class="bg-blue-50 p-6 rounded-xl border border-blue-200">
                     <h3 class="text-xl font-bold text-blue-800 mb-4">Event Information</h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -73,11 +73,11 @@
                 </div>
             </div>
 
-            
+            <!-- Sidebar -->
             <div class="space-y-6">
 
 
-                <!-- Participants -->
+                <!-- Participants Section -->
                 <div class="bg-blue-50 p-6 rounded-xl border border-blue-200">
                     <h3 class="text-lg font-bold text-blue-800 mb-4">Participants</h3>
                     {% if event.participants.all %}

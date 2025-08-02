@@ -2,14 +2,14 @@
 {% load static %}
 {% block title %}Home - Shan Event Management{% endblock %}
 {% block content %}
-<!-- Hero -->
+<!-- Hero Section -->
 <div class="relative bg-cover bg-center h-96 rounded-xl shadow-lg overflow-hidden mb-12" style="background-image: url('{% static 'images/home-hero-bg.jpeg' %}');">
     <div class="absolute inset-0 bg-black bg-opacity-60 flex items-center justify-center rounded-xl">
         <h1 class="text-6xl md:text-7xl font-extrabold text-white text-center drop-shadow-lg">Shan Event Management</h1>
     </div>
 </div>
 
-<!-- Search -->
+<!-- Search Option Section -->
 <div class="bg-blue-100 p-8 rounded-xl shadow-md mb-12 border border-blue-200">
     <h2 class="text-3xl font-bold text-blue-800 mb-6 text-center">Find Your Perfect Event</h2>
     <form method="get" action="{% url 'events:events' %}" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -25,7 +25,7 @@
     </form>
 </div>
 
-<!-- Main -->
+<!-- Main Section - Upcoming Events -->
 <div class="mb-12">
     <h2 class="text-4xl font-bold text-gray-800 mb-8 text-center">Upcoming Events</h2>
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -60,7 +60,7 @@
     </div>
 </div>
 
-<!-- Main- Previous Events -->
+<!-- Main Section - Previous Events -->
 <div class="mb-12">
     <h2 class="text-4xl font-bold text-gray-800 mb-8 text-center">Previous Events</h2>
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">

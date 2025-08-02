@@ -2,7 +2,7 @@
 {% load static %}
 {% block title %}Dashboard - Shan Event Management{% endblock %}
 {% block content %}
-<!-- Header -->
+<!-- Header Section -->
 <div class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white p-8 rounded-xl shadow-lg mb-8">
     <div class="text-center">
         <h1 class="text-4xl font-bold mb-4">Admin Dashboard</h1>
@@ -13,7 +13,7 @@
     </div>
 </div>
 
-<!-- Messages -->
+<!-- Messages Section -->
 {% if messages %}
 <div class="mb-8">
     {% for message in messages %}
@@ -24,7 +24,7 @@
 </div>
 {% endif %}
 
-<!-- Statistics -->
+<!-- Statistics Section -->
 <div class="bg-green-50 p-8 rounded-xl shadow-md mb-8 border border-green-200">
     <h2 class="text-3xl font-bold text-green-800 mb-6 text-center">System Statistics</h2>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -60,32 +60,7 @@
     </div>
 </div>
 
-
-<div class="bg-blue-50 p-6 rounded-xl shadow-md mb-8 border border-blue-200">
-    <h2 class="text-2xl font-bold text-blue-800 mb-4 text-center">Quick Actions</h2>
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <a href="{% url 'events:add' %}" class="bg-green-600 text-white p-4 rounded-lg hover:bg-green-700 transition duration-300 text-center font-semibold">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
-            </svg>
-            Add New Event
-        </a>
-        <a href="{% url 'events:participant_add' %}" class="bg-blue-600 text-white p-4 rounded-lg hover:bg-blue-700 transition duration-300 text-center font-semibold">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-            </svg>
-            Add Participant
-        </a>
-        <a href="{% url 'events:category_add' %}" class="bg-purple-600 text-white p-4 rounded-lg hover:bg-purple-700 transition duration-300 text-center font-semibold">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
-            </svg>
-            Add Category
-        </a>
-    </div>
-</div>
-
-<!-- Today Events -->
+<!-- Today's Events Section -->
 <div class="bg-yellow-50 p-8 rounded-xl shadow-md mb-8 border border-yellow-200">
     <h2 class="text-3xl font-bold text-yellow-800 mb-6 text-center">Today's Events</h2>
     
@@ -131,14 +106,14 @@
 <div class="bg-blue-50 p-8 rounded-xl shadow-md mb-12 border border-blue-200">
     <h2 class="text-3xl font-bold text-blue-800 mb-6 text-center">Manage Events</h2>
     
-    <!-- Note category -->
+    <!-- Note about categories -->
     {% if not categories %}
     <div class="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded mb-6">
         <strong>Note:</strong> You need to create at least one category before adding events. Please add a category first.
     </div>
     {% endif %}
     
-    <form method="post" class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+    <form method="post" class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8" {% if editing_event %}action="{% url 'events:edit' event_form.instance.pk %}"{% endif %}>
         {% csrf_token %}
         <input type="hidden" name="form_type" value="event">
         <div>
@@ -183,7 +158,9 @@
                 <div class="text-red-600 text-sm mt-1">{{ event_form.category.errors.0 }}</div>
             {% endif %}
         </div>
-        <button type="submit" class="col-span-1 md:col-span-2 bg-green-600 text-white p-4 rounded-lg hover:bg-green-700 transition duration-300 ease-in-out font-semibold text-lg shadow-lg transform hover:scale-105" {% if not categories %}disabled{% endif %}>Add Event</button>
+        <button type="submit" class="col-span-1 md:col-span-2 {% if editing_event %}bg-blue-600 hover:bg-blue-700{% else %}bg-green-600 hover:bg-green-700{% endif %} text-white p-4 rounded-lg transition duration-300 ease-in-out font-semibold text-lg shadow-lg transform hover:scale-105" {% if not categories %}disabled{% endif %}>
+            {% if editing_event %}Update Event{% else %}Add Event{% endif %}
+        </button>
     </form>
 
     <h3 class="text-2xl font-bold text-gray-800 mb-4">Current Events</h3>
@@ -228,14 +205,14 @@
 <div class="bg-blue-50 p-8 rounded-xl shadow-md mb-12 border border-blue-200">
     <h2 class="text-3xl font-bold text-blue-800 mb-6 text-center">Manage Participants</h2>
     
-    <!-- Note event -->
+    <!-- Note about events -->
     {% if not events %}
     <div class="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded mb-6">
         <strong>Note:</strong> You need to create at least one event before adding participants. Please add an event first.
     </div>
     {% endif %}
     
-    <form method="post" class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+    <form method="post" class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8" {% if editing_participant %}action="{% url 'events:participant_edit' participant_form.instance.pk %}"{% endif %}>
         {% csrf_token %}
         <input type="hidden" name="form_type" value="participant">
         <div>
@@ -259,7 +236,9 @@
                 <div class="text-red-600 text-sm mt-1">{{ participant_form.events.errors.0 }}</div>
             {% endif %}
         </div>
-        <button type="submit" class="col-span-1 md:col-span-3 bg-green-600 text-white p-4 rounded-lg hover:bg-green-700 transition duration-300 ease-in-out font-semibold text-lg shadow-lg transform hover:scale-105" {% if not events %}disabled{% endif %}>Add Participant</button>
+        <button type="submit" class="col-span-1 md:col-span-3 {% if editing_participant %}bg-blue-600 hover:bg-blue-700{% else %}bg-green-600 hover:bg-green-700{% endif %} text-white p-4 rounded-lg transition duration-300 ease-in-out font-semibold text-lg shadow-lg transform hover:scale-105" {% if not events %}disabled{% endif %}>
+            {% if editing_participant %}Update Participant{% else %}Add Participant{% endif %}
+        </button>
     </form>
 
     <h3 class="text-2xl font-bold text-gray-800 mb-4">Current Participants</h3>
@@ -300,10 +279,10 @@
     </div>
 </div>
 
-<!-- Manage Category -->
+<!-- Manage Categories -->
 <div class="bg-blue-50 p-8 rounded-xl shadow-md border border-blue-200">
     <h2 class="text-3xl font-bold text-blue-800 mb-6 text-center">Manage Categories</h2>
-    <form method="post" class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+    <form method="post" class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8" {% if editing_category %}action="{% url 'events:category_edit' category_form.instance.pk %}"{% endif %}>
         {% csrf_token %}
         <input type="hidden" name="form_type" value="category">
         <div>
@@ -320,7 +299,9 @@
                 <div class="text-red-600 text-sm mt-1">{{ category_form.description.errors.0 }}</div>
             {% endif %}
         </div>
-        <button type="submit" class="col-span-1 md:col-span-2 bg-green-600 text-white p-4 rounded-lg hover:bg-green-700 transition duration-300 ease-in-out font-semibold text-lg shadow-lg transform hover:scale-105">Add Category</button>
+        <button type="submit" class="col-span-1 md:col-span-2 {% if editing_category %}bg-blue-600 hover:bg-blue-700{% else %}bg-green-600 hover:bg-green-700{% endif %} text-white p-4 rounded-lg transition duration-300 ease-in-out font-semibold text-lg shadow-lg transform hover:scale-105">
+            {% if editing_category %}Update Category{% else %}Add Category{% endif %}
+        </button>
     </form>
 
     <h3 class="text-2xl font-bold text-gray-800 mb-4">Current Categories</h3>
@@ -355,25 +336,25 @@
     </div>
 </div>
 
-<!-- JS Dashboard -->
+<!-- JavaScript for Interactive Dashboard -->
 <script>
 function filterEvents(filterType) {
-    //events container
+    // Get the events container
     const eventsContainer = document.querySelector('.events-list');
     if (!eventsContainer) return;
     
-    //all event cards
+    // Get all event cards
     const eventCards = eventsContainer.querySelectorAll('.event-card');
     
-    //all events first
+    // Show all events first
     eventCards.forEach(card => {
         card.style.display = 'block';
     });
     
-    //filter
+    // Apply filter based on type
     switch(filterType) {
         case 'upcoming':
-            
+            // This would require server-side filtering, but for now we'll just show a message
             alert('Upcoming events filter would be implemented with AJAX to fetch filtered data from the server.');
             break;
         case 'past':
@@ -384,20 +365,20 @@ function filterEvents(filterType) {
             break;
         case 'all':
         default:
-            
+            // Show all events (already done above)
             break;
     }
     
-    
+    // Update active filter indicator
     document.querySelectorAll('.stat-card').forEach(card => {
         card.classList.remove('ring-4', 'ring-blue-400');
     });
     
-    
+    // Add active indicator to clicked card
     event.target.closest('.stat-card').classList.add('ring-4', 'ring-blue-400');
 }
 
-
+// Add click handlers to stat cards
 document.addEventListener('DOMContentLoaded', function() {
     const statCards = document.querySelectorAll('[onclick^="filterEvents"]');
     statCards.forEach(card => {

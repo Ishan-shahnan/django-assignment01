@@ -42,9 +42,12 @@ class EventsView(ListView):
         #Search
         search = self.request.GET.get('search')
         category = self.request.GET.get('category')
-        date_filter = self.request.GET.get('date')
         start_date = self.request.GET.get('start_date')
         end_date = self.request.GET.get('end_date')
+        
+        # Debug: Print search parameters
+        if any([search, category, start_date, end_date]):
+            print(f"Search params - search: '{search}', category: '{category}', start: '{start_date}', end: '{end_date}'")
         
         if search:
             queryset = queryset.filter(
@@ -52,19 +55,20 @@ class EventsView(ListView):
                 Q(description__icontains=search) | 
                 Q(location__icontains=search)
             )
+            print(f"After search filter: {queryset.count()} events")
         
         if category:
             queryset = queryset.filter(category_id=category)
-            
-        if date_filter:
-            queryset = queryset.filter(date=date_filter)
+            print(f"After category filter: {queryset.count()} events")
         
-        #Date 
+        #Date range filters
         if start_date:
             queryset = queryset.filter(date__gte=start_date)
+            print(f"After start_date filter: {queryset.count()} events")
             
         if end_date:
             queryset = queryset.filter(date__lte=end_date)
+            print(f"After end_date filter: {queryset.count()} events")
             
         return queryset.order_by('-date', '-time')
 
@@ -219,7 +223,6 @@ class EventUpdateView(UpdateView):
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        
         today = date.today() #Dashboard context
         context['events'] = Event.objects.select_related('category').prefetch_related('participants').all().order_by('-date', '-time')
         context['participants'] = Participant.objects.prefetch_related('events').all()
@@ -230,10 +233,19 @@ class EventUpdateView(UpdateView):
         context['upcoming_events_count'] = Event.objects.filter(date__gte=today).count()
         context['past_events_count'] = Event.objects.filter(date__lt=today).count()
         context['todays_events'] = Event.objects.filter(date=today).select_related('category').prefetch_related('participants')
-        context['event_form'] = EventForm()
+        context['event_form'] = self.get_form()  # Use the form instance being edited
         context['participant_form'] = ParticipantForm()
         context['category_form'] = CategoryForm()
+        context['editing_event'] = True  # Flag to show we're editing
         return context
+    
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        form = self.get_form()
+        if form.is_valid():
+            return self.form_valid(form)
+        else:
+            return self.form_invalid(form)
     
     def form_valid(self, form):
         response = super().form_valid(form)
@@ -306,9 +318,18 @@ class ParticipantUpdateView(UpdateView):
         context['past_events_count'] = Event.objects.filter(date__lt=today).count()
         context['todays_events'] = Event.objects.filter(date=today).select_related('category').prefetch_related('participants')
         context['event_form'] = EventForm()
-        context['participant_form'] = ParticipantForm()
+        context['participant_form'] = self.get_form()  # Use the form instance being edited
         context['category_form'] = CategoryForm()
+        context['editing_participant'] = True  # Flag to show we're editing
         return context
+    
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        form = self.get_form()
+        if form.is_valid():
+            return self.form_valid(form)
+        else:
+            return self.form_invalid(form)
     
     def form_valid(self, form):
         response = super().form_valid(form)
@@ -382,8 +403,17 @@ class CategoryUpdateView(UpdateView):
         context['todays_events'] = Event.objects.filter(date=today).select_related('category').prefetch_related('participants')
         context['event_form'] = EventForm()
         context['participant_form'] = ParticipantForm()
-        context['category_form'] = CategoryForm()
+        context['category_form'] = self.get_form()  # Use the form instance being edited
+        context['editing_category'] = True  # Flag to show we're editing
         return context
+    
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        form = self.get_form()
+        if form.is_valid():
+            return self.form_valid(form)
+        else:
+            return self.form_invalid(form)
     
     def form_valid(self, form):
         response = super().form_valid(form)
