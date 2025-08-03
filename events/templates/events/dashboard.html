@@ -1,8 +1,8 @@
-{% extends 'events/base.html' %}
+{% extends 'events/body.html' %}
 {% load static %}
 {% block title %}Dashboard - Shan Event Management{% endblock %}
 {% block content %}
-<!-- Header Section -->
+ {% comment %} header  {% endcomment %}
 <div class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white p-8 rounded-xl shadow-lg mb-8">
     <div class="text-center">
         <h1 class="text-4xl font-bold mb-4">Admin Dashboard</h1>
@@ -13,7 +13,7 @@
     </div>
 </div>
 
-<!-- Messages Section -->
+ {% comment %} message  {% endcomment %}
 {% if messages %}
 <div class="mb-8">
     {% for message in messages %}
@@ -24,11 +24,11 @@
 </div>
 {% endif %}
 
-<!-- Statistics Section -->
+{% comment %} primary stat  {% endcomment %}
 <div class="bg-green-50 p-8 rounded-xl shadow-md mb-8 border border-green-200">
     <h2 class="text-3xl font-bold text-green-800 mb-6 text-center">System Statistics</h2>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <!-- Row 1 -->
+        
         <div class="bg-white p-6 rounded-lg shadow-md text-center cursor-pointer hover:shadow-lg transition duration-300" onclick="filterEvents('all')">
             <div class="text-4xl font-bold text-blue-600 mb-2">{{ total_events|default:0 }}</div>
             <div class="text-gray-600 font-semibold">Total Events</div>
@@ -38,7 +38,7 @@
             <div class="text-gray-600 font-semibold">Upcoming Events</div>
         </div>
         
-        <!-- Row 2 -->
+        
         <div class="bg-white p-6 rounded-lg shadow-md text-center cursor-pointer hover:shadow-lg transition duration-300" onclick="filterEvents('past')">
             <div class="text-4xl font-bold text-orange-600 mb-2">{{ past_events_count|default:0 }}</div>
             <div class="text-gray-600 font-semibold">Past Events</div>
@@ -48,7 +48,7 @@
             <div class="text-gray-600 font-semibold">Total Participants</div>
         </div>
         
-        <!-- Row 3 -->
+        
         <div class="bg-white p-6 rounded-lg shadow-md text-center">
             <div class="text-4xl font-bold text-indigo-600 mb-2">{{ total_categories|default:0 }}</div>
             <div class="text-gray-600 font-semibold">Categories</div>
@@ -60,7 +60,7 @@
     </div>
 </div>
 
-<!-- Today's Events Section -->
+ {% comment %} today's event  {% endcomment %}
 <div class="bg-yellow-50 p-8 rounded-xl shadow-md mb-8 border border-yellow-200">
     <h2 class="text-3xl font-bold text-yellow-800 mb-6 text-center">Today's Events</h2>
     
@@ -102,11 +102,11 @@
     {% endif %}
 </div>
 
-<!-- Manage Events -->
+ {% comment %} event manage  {% endcomment %}
 <div class="bg-blue-50 p-8 rounded-xl shadow-md mb-12 border border-blue-200">
     <h2 class="text-3xl font-bold text-blue-800 mb-6 text-center">Manage Events</h2>
     
-    <!-- Note about categories -->
+    {% comment %} categories note  {% endcomment %}
     {% if not categories %}
     <div class="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded mb-6">
         <strong>Note:</strong> You need to create at least one category before adding events. Please add a category first.
@@ -201,11 +201,11 @@
     </div>
 </div>
 
-<!-- Manage Participants -->
+{% comment %} participants  {% endcomment %}
 <div class="bg-blue-50 p-8 rounded-xl shadow-md mb-12 border border-blue-200">
     <h2 class="text-3xl font-bold text-blue-800 mb-6 text-center">Manage Participants</h2>
     
-    <!-- Note about events -->
+    {% comment %} event notes  {% endcomment %}
     {% if not events %}
     <div class="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded mb-6">
         <strong>Note:</strong> You need to create at least one event before adding participants. Please add an event first.
@@ -279,7 +279,7 @@
     </div>
 </div>
 
-<!-- Manage Categories -->
+{% comment %} Categories  {% endcomment %}
 <div class="bg-blue-50 p-8 rounded-xl shadow-md border border-blue-200">
     <h2 class="text-3xl font-bold text-blue-800 mb-6 text-center">Manage Categories</h2>
     <form method="post" class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8" {% if editing_category %}action="{% url 'events:category_edit' category_form.instance.pk %}"{% endif %}>
@@ -336,25 +336,25 @@
     </div>
 </div>
 
-<!-- JavaScript for Interactive Dashboard -->
+{% comment %} JS dashboard  {% endcomment %}
 <script>
 function filterEvents(filterType) {
-    // Get the events container
+    
     const eventsContainer = document.querySelector('.events-list');
     if (!eventsContainer) return;
     
-    // Get all event cards
+    
     const eventCards = eventsContainer.querySelectorAll('.event-card');
     
-    // Show all events first
+    
     eventCards.forEach(card => {
         card.style.display = 'block';
     });
     
-    // Apply filter based on type
+    
     switch(filterType) {
         case 'upcoming':
-            // This would require server-side filtering, but for now we'll just show a message
+        
             alert('Upcoming events filter would be implemented with AJAX to fetch filtered data from the server.');
             break;
         case 'past':
@@ -365,20 +365,20 @@ function filterEvents(filterType) {
             break;
         case 'all':
         default:
-            // Show all events (already done above)
+            
             break;
     }
     
-    // Update active filter indicator
+    
     document.querySelectorAll('.stat-card').forEach(card => {
         card.classList.remove('ring-4', 'ring-blue-400');
     });
     
-    // Add active indicator to clicked card
+    
     event.target.closest('.stat-card').classList.add('ring-4', 'ring-blue-400');
 }
 
-// Add click handlers to stat cards
+
 document.addEventListener('DOMContentLoaded', function() {
     const statCards = document.querySelectorAll('[onclick^="filterEvents"]');
     statCards.forEach(card => {

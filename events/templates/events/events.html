@@ -1,8 +1,8 @@
-{% extends 'events/base.html' %}
+{% extends 'events/body.html' %}
 {% load static %}
 {% block title %}All Events - Shan Event Management{% endblock %}
 {% block content %}
-<!-- Header Section -->
+{% comment %} Header  {% endcomment %}
 <div class="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-8 rounded-xl shadow-lg mb-8">
     <div class="text-center">
         <h1 class="text-4xl font-bold mb-4">All Events</h1>
@@ -10,7 +10,7 @@
     </div>
 </div>
 
-<!-- Statistics Section -->
+{% comment %} Stat  {% endcomment %}
 <div class="bg-green-50 p-6 rounded-xl shadow-md mb-8 border border-green-200">
     <h2 class="text-2xl font-bold text-green-800 mb-4 text-center">Event Statistics</h2>
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -29,7 +29,7 @@
     </div>
 </div>
 
-<!-- Search Section -->
+{% comment %} Serach bar  {% endcomment %}
 <div class="bg-blue-100 p-6 rounded-xl shadow-md mb-8 border border-blue-200">
     <h2 class="text-2xl font-bold text-blue-800 mb-4 text-center">Search & Filter Events</h2>
     <form method="get" action="" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
@@ -45,7 +45,7 @@
         <button type="submit" class="bg-blue-600 text-white p-3 rounded-lg hover:bg-blue-700 transition duration-300">Search</button>
     </form>
     
-    <!-- Clear Filters -->
+    {% comment %} Clear filder  {% endcomment %}
     {% if request.GET %}
     <div class="mt-4 text-center">
         <a href="{% url 'events:events' %}" class="text-blue-600 hover:text-blue-800 underline">Clear all filters</a>
@@ -53,7 +53,7 @@
     {% endif %}
 </div>
 
-<!-- Search Results Summary -->
+{% comment %} Result - search  {% endcomment %}
 {% if request.GET %}
 <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
     <h3 class="text-lg font-semibold text-blue-800 mb-2">Search Results</h3>
@@ -76,7 +76,7 @@
 </div>
 {% endif %}
 
-<!-- Events Grid -->
+ {% comment %} event- grid  {% endcomment %}
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
     {% for event in events %}
     <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200 transform hover:scale-105 transition duration-300 ease-in-out">

@@ -1,15 +1,15 @@
-{% extends 'events/base.html' %}
+{% extends 'events/body.html' %}
 {% load static %}
 {% block title %}Home - Shan Event Management{% endblock %}
 {% block content %}
-<!-- Hero Section -->
+{% comment %} Hero  {% endcomment %}
 <div class="relative bg-cover bg-center h-96 rounded-xl shadow-lg overflow-hidden mb-12" style="background-image: url('{% static 'images/home-hero-bg.jpeg' %}');">
     <div class="absolute inset-0 bg-black bg-opacity-60 flex items-center justify-center rounded-xl">
         <h1 class="text-6xl md:text-7xl font-extrabold text-white text-center drop-shadow-lg">Shan Event Management</h1>
     </div>
 </div>
 
-<!-- Search Option Section -->
+{% comment %} Serach bar  {% endcomment %}
 <div class="bg-blue-100 p-8 rounded-xl shadow-md mb-12 border border-blue-200">
     <h2 class="text-3xl font-bold text-blue-800 mb-6 text-center">Find Your Perfect Event</h2>
     <form method="get" action="{% url 'events:events' %}" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -25,7 +25,7 @@
     </form>
 </div>
 
-<!-- Main Section - Upcoming Events -->
+{% comment %} Main  {% endcomment %}
 <div class="mb-12">
     <h2 class="text-4xl font-bold text-gray-800 mb-8 text-center">Upcoming Events</h2>
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -60,7 +60,7 @@
     </div>
 </div>
 
-<!-- Main Section - Previous Events -->
+{% comment %} Main- previous  {% endcomment %}
 <div class="mb-12">
     <h2 class="text-4xl font-bold text-gray-800 mb-8 text-center">Previous Events</h2>
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
