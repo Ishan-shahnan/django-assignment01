@@ -48,7 +48,7 @@
     {% comment %} Clear filder  {% endcomment %}
     {% if request.GET %}
     <div class="mt-4 text-center">
-        <a href="{% url 'events:events' %}" class="text-blue-600 hover:text-blue-800 underline">Clear all filters</a>
+        <a href="{% url 'events' %}" class="text-blue-600 hover:text-blue-800 underline">Clear all filters</a>
     </div>
     {% endif %}
 </div>
@@ -80,7 +80,7 @@
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
     {% for event in events %}
     <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200 transform hover:scale-105 transition duration-300 ease-in-out">
-        <div class="w-full h-56 bg-cover bg-center rounded-t-xl" style="background-image: url('{% static 'images/event.jpeg' %}');">
+        <div class="w-full h-56 bg-cover bg-center rounded-t-xl" style="background-image: url('{{ event.image.url }}');">
             <div class="w-full h-full bg-black bg-opacity-40 flex items-center justify-center">
                 <h3 class="text-white text-2xl font-bold text-center px-4">{{ event.name }}</h3>
             </div>
@@ -105,7 +105,7 @@
                     <span class="font-semibold text-green-600">Participants:</span> {{ event.participants.count }}
                 </p>
             </div>
-            <a href="{% url 'events:detail' event.pk %}" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-300 w-full text-center block font-semibold">View Details</a>
+            <a href="{% url 'event-detail' event.pk %}" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-300 w-full text-center block font-semibold">View Details</a>
         </div>
     </div>
     {% empty %}
@@ -130,8 +130,8 @@
             {% endif %}
             
             <div class="space-y-2">
-                <a href="{% url 'events:events' %}" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition duration-300 inline-block">Clear All Filters</a>
-                <a href="{% url 'events:home' %}" class="bg-gray-600 text-white px-6 py-3 rounded-lg hover:bg-gray-700 transition duration-300 inline-block ml-2">Back to Home</a>
+                <a href="{% url 'events' %}" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition duration-300 inline-block">Clear All Filters</a>
+                <a href="{% url 'home' %}" class="bg-gray-600 text-white px-6 py-3 rounded-lg hover:bg-gray-700 transition duration-300 inline-block ml-2">Back to Home</a>
             </div>
         </div>
     </div>

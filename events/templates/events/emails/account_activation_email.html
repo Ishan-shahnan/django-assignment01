@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Activate Your Account - Shan Event Management</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f3f4f6;
+            color: #222;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 500px;
+            margin: 40px auto;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            padding: 32px;
+        }
+
+        .btn {
+            display: inline-block;
+            background: #2563eb;
+            color: #fff;
+            padding: 12px 24px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: bold;
+            margin-top: 24px;
+        }
+
+        .footer {
+            margin-top: 32px;
+            font-size: 13px;
+            color: #888;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1 style="color:#2563eb;">Welcome, {{ user.username }}!</h1>
+        <p>Thank you for registering at <strong>Shan Event Management</strong>.</p>
+        <p>Please click the button below to activate your account:</p>
+        <p style="text-align:center;">
+            <a href="http://{{ domain }}{% url 'activate' user_id=uid token=token %}" class="btn">Activate Account</a>
+        </p>
+        <p>If the button above does not work, copy and paste the following link into your browser:</p>
+        <p style="word-break:break-all; background:#f3f4f6; padding:8px; border-radius:4px;">
+            http://{{ domain }}{% url 'activate' user_id=uid token=token %}
+        </p>
+        <div class="footer">
+            &copy; {% now "Y" %} Shan Event Management. All rights reserved.
+        </div>
+    </div>
+</body>
+
+</html>

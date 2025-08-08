@@ -12,7 +12,7 @@
 {% comment %} Serach bar  {% endcomment %}
 <div class="bg-blue-100 p-8 rounded-xl shadow-md mb-12 border border-blue-200">
     <h2 class="text-3xl font-bold text-blue-800 mb-6 text-center">Find Your Perfect Event</h2>
-    <form method="get" action="{% url 'events:events' %}" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    <form method="get" action="{% url 'events' %}" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <input type="text" name="search" placeholder="Type name or keyword" value="{{ request.GET.search }}" class="p-4 border border-blue-300 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-400 focus:border-transparent transition duration-300 shadow-sm">
         <select name="category" class="p-4 border border-blue-300 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-400 focus:border-transparent transition duration-300 shadow-sm">
             <option value="">Select Category</option>
@@ -31,7 +31,7 @@
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {% for event in upcoming_events %}
         <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200 transform hover:scale-105 transition duration-300 ease-in-out">
-            <div class="w-full h-56 bg-cover bg-center rounded-t-xl" style="background-image: url('{% static 'images/event.jpeg' %}');">
+            <div class="w-full h-56 bg-cover bg-center rounded-t-xl" style="background-image: url('{{ event.image.url }}');">
                 <div class="w-full h-full bg-black bg-opacity-40 flex items-center justify-center">
                     <h3 class="text-white text-2xl font-bold text-center px-4">{{ event.name }}</h3>
                 </div>
@@ -43,7 +43,7 @@
                     <span class="font-semibold text-blue-600">Date:</span> {{ event.date }} | 
                     <span class="font-semibold text-blue-600">Time:</span> {{ event.time }}
                 </p>
-                <a href="{% url 'events:detail' event.pk %}" class="bg-blue-600 text-white p-3 rounded-lg hover:bg-blue-700 transition duration-300 w-full font-semibold shadow-md block text-center">Detailed Information</a>
+                <a href="{% url 'event-detail' event.pk %}" class="bg-blue-600 text-white p-3 rounded-lg hover:bg-blue-700 transition duration-300 w-full font-semibold shadow-md block text-center">Detailed Information</a>
             </div>
         </div>
         {% empty %}
@@ -66,7 +66,7 @@
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {% for event in previous_events %}
         <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200 opacity-80">
-            <div class="w-full h-56 bg-cover bg-center rounded-t-xl" style="background-image: url('{% static 'images/event.jpeg' %}');">
+            <div class="w-full h-56 bg-cover bg-center rounded-t-xl" style="background-image: url('{{ event.image.url }}');">
                 <div class="w-full h-full bg-black bg-opacity-40 flex items-center justify-center">
                     <h3 class="text-white text-2xl font-bold text-center px-4">{{ event.name }}</h3>
                 </div>
@@ -78,7 +78,7 @@
                     <span class="font-semibold text-blue-600">Date:</span> {{ event.date }} | 
                     <span class="font-semibold text-blue-600">Time:</span> {{ event.time }}
                 </p>
-                <a href="{% url 'events:detail' event.pk %}" class="bg-gray-400 text-white p-3 rounded-lg cursor-not-allowed w-full font-semibold shadow-md block text-center">Detailed Information</a>
+                <a href="{% url 'event-detail' event.pk %}" class="bg-gray-400 text-white p-3 rounded-lg cursor-not-allowed w-full font-semibold shadow-md block text-center">Detailed Information</a>
             </div>
         </div>
         {% empty %}

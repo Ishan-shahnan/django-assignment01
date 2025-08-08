@@ -1,28 +1,38 @@
 from django.urls import path
-from . import views
-
-app_name = 'events'
+from django.contrib.auth.views import LogoutView
+from events.views import signup_view, CustomLoginView, activate, dashboard_redirect_view, admin_dashboard, organizer_dashboard, participant_dashboard, DashboardView, rsvp_event, my_rsvps, manage_rsvps, event_rsvps, delete_rsvp, HomeView, EventsView, ContactView, EventDetailView, EventCreateView, EventUpdateView, EventDeleteView, ParticipantCreateView, ParticipantUpdateView, ParticipantDeleteView, CategoryCreateView, CategoryUpdateView, CategoryDeleteView, rbac_dashboard, assign_user_role, create_group, delete_group, delete_user
 
 urlpatterns = [
-    # Main Pages
-    path('', views.HomeView.as_view(), name='home'),
-    path('events/', views.EventsView.as_view(), name='events'),
-    path('contact/', views.ContactView.as_view(), name='contact'),
-    path('dashboard/', views.DashboardView.as_view(), name='dashboard'),
-
-    # Event URLs
-    path('event/<int:pk>/', views.EventDetailView.as_view(), name='detail'),
-    path('event/add/', views.EventCreateView.as_view(), name='add'),
-    path('event/<int:pk>/edit/', views.EventUpdateView.as_view(), name='edit'),
-    path('event/<int:pk>/delete/', views.EventDeleteView.as_view(), name='delete'),
-
-    # Participant URLs
-    path('participant/add/', views.ParticipantCreateView.as_view(), name='participant_add'),
-    path('participant/<int:pk>/edit/', views.ParticipantUpdateView.as_view(), name='participant_edit'),
-    path('participant/<int:pk>/delete/', views.ParticipantDeleteView.as_view(), name='participant_delete'),
-
-    # Category URLs
-    path('category/add/', views.CategoryCreateView.as_view(), name='category_add'),
-    path('category/<int:pk>/edit/', views.CategoryUpdateView.as_view(), name='category_edit'),
-    path('category/<int:pk>/delete/', views.CategoryDeleteView.as_view(), name='category_delete'),
-] 
+    path('sign-up/', signup_view, name='sign-up'),
+    path('sign-in/', CustomLoginView.as_view(), name='sign-in'),
+    path('sign-out/', LogoutView.as_view(next_page='/sign-in/'), name='sign-out'),
+    path('activate/<int:user_id>/<str:token>/', activate, name='activate'),
+    path('dashboard/redirect/', dashboard_redirect_view, name='dashboard-redirect'),
+    path('dashboard/admin/', admin_dashboard, name='admin-dashboard'),
+    path('dashboard/organizer/', organizer_dashboard, name='organizer-dashboard'),
+    path('dashboard/participant/', participant_dashboard, name='participant-dashboard'),
+    path('dashboard/', DashboardView.as_view(), name='dashboard'),
+    path('events/<int:event_id>/rsvp/', rsvp_event, name='rsvp-event'),
+    path('my-rsvps/', my_rsvps, name='my-rsvps'),
+    path('manage-rsvps/', manage_rsvps, name='manage-rsvps'),
+    path('events/<int:event_id>/rsvps/', event_rsvps, name='event-rsvps'),
+    path('rsvps/<int:rsvp_id>/delete/', delete_rsvp, name='delete-rsvp'),
+    path('', HomeView.as_view(), name='home'),
+    path('events/', EventsView.as_view(), name='events'),
+    path('contact/', ContactView.as_view(), name='contact'),
+    path('event/<int:pk>/', EventDetailView.as_view(), name='event-detail'),
+    path('event/add/', EventCreateView.as_view(), name='event-add'),
+    path('event/<int:pk>/edit/', EventUpdateView.as_view(), name='event-edit'),
+    path('event/<int:pk>/delete/', EventDeleteView.as_view(), name='event-delete'),
+    path('participant/add/', ParticipantCreateView.as_view(), name='participant-add'),
+    path('participant/<int:pk>/edit/', ParticipantUpdateView.as_view(), name='participant-edit'),
+    path('participant/<int:pk>/delete/', ParticipantDeleteView.as_view(), name='participant-delete'),
+    path('category/add/', CategoryCreateView.as_view(), name='category-add'),
+    path('category/<int:pk>/edit/', CategoryUpdateView.as_view(), name='category-edit'),
+    path('category/<int:pk>/delete/', CategoryDeleteView.as_view(), name='category-delete'),
+    path('rbac/', rbac_dashboard, name='rbac-dashboard'),
+    path('rbac/assign-role/<int:user_id>/', assign_user_role, name='assign-role'),
+    path('rbac/create-group/', create_group, name='create-group'),
+    path('rbac/delete-group/<int:group_id>/', delete_group, name='delete-group'),
+    path('rbac/delete-user/<int:user_id>/', delete_user, name='delete-user'),
+]

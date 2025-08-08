@@ -1,0 +1,6 @@
+@echo off
+echo Activating virtual environment...
+call "c:\Users\ishan\Desktop\Websites\Django Project\event\venv\Scripts\activate.bat"
+echo Testing email functionality...
+python manage.py test_email shahnanishan@gmail.com
+pause 

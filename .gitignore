@@ -2,3 +2,9 @@ venv/
 __pycache__/
 db.sqlite3
 node_modules/
+.env
+.env.backup
+bash.exe.stackdump
+sent_emails/
+media/
+*.log

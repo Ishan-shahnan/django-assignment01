@@ -21,11 +21,83 @@
             -webkit-box-orient: vertical;
             overflow: hidden;
         }
+        
+        /* Simple navbar stability */
+        nav {
+            position: sticky;
+            top: 0;
+            z-index: 40;
+        }
+        
+        .nav-link {
+            white-space: nowrap;
+        }
+        
+        /* Image styling for consistent sizing */
+        .event-image {
+            width: 100%;
+            height: 224px; /* 14rem = 224px */
+            object-fit: cover;
+            object-position: center;
+        }
+        
+        .event-card-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center;
+        }
+        
+        .dashboard-event-image {
+            width: 64px;
+            height: 64px;
+            object-fit: cover;
+            object-position: center;
+            border-radius: 0.5rem;
+            border: 1px solid #d1d5db;
+        }
     </style>
 </head>
 <body class="bg-gray-100 font-sans text-gray-800">
 
     {% include 'events/navbar.html' %}
+
+    {% comment %} message  {% endcomment %}
+    {% if messages %}
+        <div class="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 w-full max-w-md">
+            {% for message in messages %}
+                <div class="p-4 mb-4 rounded-lg shadow-lg {% if message.tags == 'error' %}bg-red-100 border border-red-400 text-red-700{% elif message.tags == 'success' %}bg-green-100 border border-green-400 text-green-700{% elif message.tags == 'warning' %}bg-yellow-100 border border-yellow-400 text-yellow-700{% elif message.tags == 'info' %}bg-blue-100 border border-blue-400 text-blue-700{% else %}bg-gray-100 border border-gray-400 text-gray-700{% endif %}">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            {% if message.tags == 'error' %}
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.464 0L4.35 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+                                </svg>
+                            {% elif message.tags == 'success' %}
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                                </svg>
+                            {% elif message.tags == 'warning' %}
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.464 0L13.732 4c-.77-.833-1.732-.833-2.464 0L4.35 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+                                </svg>
+                            {% elif message.tags == 'info' %}
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                            {% endif %}
+                            <span class="font-medium">{{ message }}</span>
+                        </div>
+                        <button onclick="this.parentElement.parentElement.remove()" class="ml-4 text-gray-500 hover:text-gray-700">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
 
     <main class="container mx-auto my-8 p-4">
         {% block content %}{% endblock %}
@@ -42,5 +114,27 @@
             </div>
         </div>
     </footer>
+    
+    {% comment %} dismiss message {% endcomment %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const messages = document.querySelectorAll('.fixed .mb-4');
+            messages.forEach(function(message) {
+                setTimeout(function() {
+                    message.style.transition = 'opacity 0.5s ease-out, transform 0.5s ease-out';
+                    message.style.opacity = '0';
+                    message.style.transform = 'translateY(-20px)';
+                    setTimeout(function() {
+                        message.remove();
+                    }, 500);
+                }, 5000);
+            });
+            
+            const navbar = document.querySelector('nav');
+            if (navbar) {
+                navbar.style.position = 'sticky';
+            }
+        });
+    </script>
 </body>
 </html> 
