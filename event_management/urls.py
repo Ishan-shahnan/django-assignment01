@@ -24,9 +24,11 @@ urlpatterns = [
     path('', include('events.urls')),
 ]
 
-# Serve media files in development
+# Serve media files in development and production
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+# Debug toolbar only in development
 if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     import debug_toolbar
     urlpatterns += [
         path('__debug__/', include(debug_toolbar.urls)),
