@@ -136,6 +136,6 @@ EMAIL_PORT = config('EMAIL_PORT')
 EMAIL_HOST_USER = config('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
 
-FRONTEND_URL = config('FRONTEND_URL', default='http://127.0.0.1:8000')
+FRONTEND_URL = 'https://event-management-oxdm.onrender.com'
 
 LOGIN_URL = 'events:login'
