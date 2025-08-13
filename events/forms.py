@@ -1,10 +1,11 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
-from django.contrib.auth.models import User
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 from datetime import date
 from .models import Event, Participant, Category
+from users.models import CustomUser
 
 
 class EventForm(forms.ModelForm):
@@ -107,7 +108,7 @@ class CategoryForm(forms.ModelForm):
 
 class SignUpForm(UserCreationForm):
     class Meta:
-        model = User
+        model = CustomUser
         fields = ('username', 'first_name', 'last_name', 'email', 'password1', 'password2')
         widgets = {
             'username': forms.TextInput(attrs={
@@ -152,7 +153,7 @@ class SignUpForm(UserCreationForm):
         email = self.cleaned_data.get('email')
         if email:
             email = email.strip()
-            if User.objects.filter(email__iexact=email).exists():
+            if CustomUser.objects.filter(email__iexact=email).exists():
                 raise ValidationError("A user with this email already exists.")
         return email
 
@@ -174,6 +175,9 @@ class SignUpForm(UserCreationForm):
 
 
 class SignInForm(AuthenticationForm):
+    class Meta:
+        model = CustomUser
+        fields = ['username', 'password']
     def __init__(self, request=None, *args, **kwargs):
         super().__init__(request, *args, **kwargs)
         self.fields['username'].widget.attrs.update({
@@ -184,6 +188,24 @@ class SignInForm(AuthenticationForm):
             'class': 'w-full p-3 border border-blue-300 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-400 focus:border-transparent shadow-sm',
             'placeholder': 'Password'
         })
+
+    def clean_username(self):
+        username = self.cleaned_data.get('username')
+        print(f'Username before cleaning: {username}')
+        if username:
+            username = username.strip()
+            # if len(username) < 2:
+            #     raise ValidationError("Username must be at least 2 characters long.")
+        return username
+
+    def clean_password(self):
+        password = self.cleaned_data.get('password')
+        print(f'Password before cleaning: {password}')
+        if password:
+            password = password.strip()
+            # if len(password) < 6:
+            #     raise ValidationError("Password must be at least 6 characters long.")
+        return password
 
 
 # RBA access

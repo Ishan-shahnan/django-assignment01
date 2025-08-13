@@ -1,4 +1,4 @@
-from django.contrib.auth.models import User
+from django.conf import settings
 from django.db import models
 from django.utils import timezone
 from django.core.exceptions import ValidationError
@@ -20,7 +20,7 @@ class Event(models.Model):
     time = models.TimeField()
     location = models.CharField(max_length=200)
     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='events')
-    rsvps = models.ManyToManyField(User, related_name='rsvp_events', blank=True)
+    rsvps = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='rsvp_events', blank=True)
 
     def __str__(self):
         return self.name
@@ -37,8 +37,8 @@ class Event(models.Model):
     @property
     def rsvp_users(self):
         """Get all users who have RSVP'd to this event"""
-        return User.objects.filter(user_rsvps__event=self, user_rsvps__status='confirmed')
-    
+        return settings.AUTH_USER_MODEL.objects.filter(user_rsvps__event=self, user_rsvps__status='confirmed')
+
     @property
     def has_confirmed_rsvp(self):
         """Check if this event has a confirmed RSVP"""
@@ -58,7 +58,7 @@ class RSVP(models.Model):
         ('pending', 'Pending'),
     ]
     
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_rsvps')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='user_rsvps')
     event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='event_rsvps')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='confirmed')
     created_at = models.DateTimeField(auto_now_add=True)
@@ -99,4 +99,3 @@ class Participant(models.Model):
 
     def __str__(self):
         return self.name
-

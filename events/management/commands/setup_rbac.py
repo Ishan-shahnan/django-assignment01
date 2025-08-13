@@ -1,6 +1,8 @@
 from django.core.management.base import BaseCommand
 from django.contrib.auth.models import Group, User
 
+from users.models import CustomUser
+
 
 class Command(BaseCommand):
     help = 'Set up Role-Based Access Control groups and assign default roles'
@@ -21,7 +23,7 @@ class Command(BaseCommand):
         
 
         admin_group = Group.objects.get(name='Admin')
-        superusers = User.objects.filter(is_superuser=True)
+        superusers = CustomUser.objects.filter(is_superuser=True)
         
         for user in superusers:
             if not user.groups.filter(name='Admin').exists():
@@ -31,7 +33,7 @@ class Command(BaseCommand):
                 )
         
         participant_group = Group.objects.get(name='Participant')
-        users_without_groups = User.objects.filter(groups__isnull=True, is_superuser=False)
+        users_without_groups = CustomUser.objects.filter(groups__isnull=True, is_superuser=False)
         
         for user in users_without_groups:
             user.groups.add(participant_group)
