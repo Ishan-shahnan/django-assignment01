@@ -42,7 +42,8 @@ urlpatterns = [
     ), name='password_reset_complete'),
 ]
 
-# Serve media 
+
+# Serve media files in development and production
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     import debug_toolbar

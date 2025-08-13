@@ -1,5 +1,6 @@
 from pathlib import Path
 from decouple import config
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -9,10 +10,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = config('SECRET_KEY')
+SECRET_KEY = config('SECRET_KEY', default='django-insecure-9!_s5)iv(r1f*7%7otj2xyee&_g@5a#qk44&f$(mas&dq)hwra')
 
 # SECURITY WARNING: don't run with debug turned on in production!
+
 DEBUG = config('DEBUG', default=False, cast=bool)
+
 
 ALLOWED_HOSTS = ['*']
 CSRF_TRUSTED_ORIGINS = ['https://*.onrender.com', 'http://127.0.0.1:8000']
@@ -119,6 +122,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 STATICFILES_DIRS = [
     BASE_DIR / 'staticfiles',
@@ -126,13 +130,19 @@ STATICFILES_DIRS = [
 
 STATIC_ROOT = BASE_DIR / 'static'
 
+# Media files configuration
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+
+
+os.makedirs(MEDIA_ROOT, exist_ok=True)
+os.makedirs(STATIC_ROOT, exist_ok=True)
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
 
 # For development - emails will be printed to console
 # EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
@@ -147,6 +157,8 @@ EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
 
 # FRONTEND_URL = config('FRONTEND_URL', default='https://event-management-oxdm.onrender.com')
 
-FRONTEND_URL = 'http://127.0.0.1:8000'
+# FRONTEND_URL = 'http://127.0.0.1:8000'
+
+FRONTEND_URL = config('FRONTEND_URL', default='https://event-management-oxdm.onrender.com')
 
 LOGIN_URL = 'sign-in'
