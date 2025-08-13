@@ -12,7 +12,8 @@ from django.urls import reverse_lazy
 from django.utils.decorators import method_decorator
 from django.utils.encoding import force_str
 from django.utils.http import urlsafe_base64_decode
-from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, TemplateView
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, TemplateView, View
+from django.contrib.auth.mixins import LoginRequiredMixin
 
 from .decorators import group_required
 from .forms import EventForm, ParticipantForm, CategoryForm, SignUpForm, SignInForm, AssignRoleForm, CreateGroupForm
@@ -473,36 +474,38 @@ class CategoryDeleteView(DeleteView):
         return redirect(self.success_url)
 
 
-def signup_view(request):
-    if request.method == 'POST':
-        form = SignUpForm(request.POST)
-        if form.is_valid():
-            user = form.save(commit=False)
-            user.is_active = False 
-            user.save()
-            return render(request, 'events/activation_sent.html')
-    else:
-        form = SignUpForm()
-    return render(request, 'events/signup.html', {'form': form})
+class SignUpView(CreateView):
+    form_class = SignUpForm
+    template_name = 'events/signup.html'
+    
+    def form_valid(self, form):
+        user = form.save(commit=False)
+        user.is_active = False
+        user.save()
+        return render(self.request, 'events/activation_sent.html')
+    
+    def form_invalid(self, form):
+        return super().form_invalid(form)
 
 
-def activate(request, user_id, token):
-    try:
-        user = User.objects.get(id=user_id)
-        if default_token_generator.check_token(user, token):
-            user.is_active = True
-            user.save()
-            participant_group, created = Group.objects.get_or_create(name='Participant')
-            user.groups.add(participant_group)
-            login(request, user)
-            messages.success(request, 'Account activated successfully!')
-            return redirect('dashboard-redirect')
-        else:
-            messages.error(request, 'Invalid activation link.')
+class ActivateView(View):
+    def get(self, request, user_id, token):
+        try:
+            user = User.objects.get(id=user_id)
+            if default_token_generator.check_token(user, token):
+                user.is_active = True
+                user.save()
+                participant_group, created = Group.objects.get_or_create(name='Participant')
+                user.groups.add(participant_group)
+                login(request, user)
+                messages.success(request, 'Account activated successfully!')
+                return redirect('dashboard-redirect')
+            else:
+                messages.error(request, 'Invalid activation link.')
+                return render(request, 'events/activation_invalid.html')
+        except User.DoesNotExist:
+            messages.error(request, 'User not found.')
             return render(request, 'events/activation_invalid.html')
-    except User.DoesNotExist:
-        messages.error(request, 'User not found.')
-        return render(request, 'events/activation_invalid.html')
 
 
 class CustomLoginView(LoginView):
@@ -513,79 +516,99 @@ class CustomLoginView(LoginView):
         return reverse_lazy('dashboard-redirect')
 
 
-@login_required(login_url='sign-in')
-def dashboard_redirect_view(request):
-    if request.user.groups.filter(name='Admin').exists():
-        return redirect('admin-dashboard')
-    elif request.user.groups.filter(name='Organizer').exists():
-        return redirect('organizer-dashboard')
-    else:
-        return redirect('participant-dashboard')
+class DashboardRedirectView(LoginRequiredMixin, View):
+    login_url = 'sign-in'
+    
+    def get(self, request):
+        if request.user.groups.filter(name='Admin').exists():
+            return redirect('admin-dashboard')
+        elif request.user.groups.filter(name='Organizer').exists():
+            return redirect('organizer-dashboard')
+        else:
+            return redirect('participant-dashboard')
 
 
-@login_required(login_url='sign-in')
-@group_required('Admin')
-def admin_dashboard(request):
-    today = date.today()
-    context = {
-        'events': Event.objects.select_related('category').prefetch_related('participants').all().order_by('-date',
-                                                                                                           '-time'),
-        'participants': Participant.objects.prefetch_related('events').all(),
-        'categories': Category.objects.all(),
-        'total_participants': Participant.objects.aggregate(total=Count('id'))['total'],
-        'total_events': Event.objects.aggregate(total=Count('id'))['total'],
-        'total_categories': Category.objects.aggregate(total=Count('id'))['total'],
-        'upcoming_events_count': Event.objects.filter(date__gte=today).count(),
-        'past_events_count': Event.objects.filter(date__lt=today).count(),
-        'todays_events': Event.objects.filter(date=today).select_related('category').prefetch_related('participants'),
-        'event_form': EventForm(),
-        'participant_form': ParticipantForm(),
-        'category_form': CategoryForm()
-    }
-    return render(request, 'events/admin_dashboard.html', context)
+class AdminDashboardView(LoginRequiredMixin, TemplateView):
+    template_name = 'events/admin_dashboard.html'
+    login_url = 'sign-in'
+    
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name='Admin').exists():
+            messages.error(request, 'Access denied. Admin privileges required.')
+            return redirect('dashboard-redirect')
+        return super().dispatch(request, *args, **kwargs)
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        today = date.today()
+        context.update({
+            'events': Event.objects.select_related('category').prefetch_related('participants').all().order_by('-date', '-time'),
+            'participants': Participant.objects.prefetch_related('events').all(),
+            'categories': Category.objects.all(),
+            'total_participants': Participant.objects.aggregate(total=Count('id'))['total'],
+            'total_events': Event.objects.aggregate(total=Count('id'))['total'],
+            'total_categories': Category.objects.aggregate(total=Count('id'))['total'],
+            'upcoming_events_count': Event.objects.filter(date__gte=today).count(),
+            'past_events_count': Event.objects.filter(date__lt=today).count(),
+            'todays_events': Event.objects.filter(date=today).select_related('category').prefetch_related('participants'),
+            'event_form': EventForm(),
+            'participant_form': ParticipantForm(),
+            'category_form': CategoryForm()
+        })
+        return context
 
 
-# Organizer Dashboard
-@login_required(login_url='sign-in')
-@group_required('Organizer')
-def organizer_dashboard(request):
-    today = date.today()
-    context = {
-        'events': Event.objects.select_related('category').prefetch_related('participants').all().order_by('-date',
-                                                                                                           '-time'),
-        'organized_events': Event.objects.select_related('category').prefetch_related('participants').all().order_by('-date',
-                                                                                                           '-time'),
-        'participants': Participant.objects.prefetch_related('events').all(),
-        'categories': Category.objects.all(),
-        'total_participants': Participant.objects.aggregate(total=Count('id'))['total'],
-        'total_events': Event.objects.aggregate(total=Count('id'))['total'],
-        'total_categories': Category.objects.aggregate(total=Count('id'))['total'],
-        'upcoming_events_count': Event.objects.filter(date__gte=today).count(),
-        'past_events_count': Event.objects.filter(date__lt=today).count(),
-        'todays_events': Event.objects.filter(date=today).select_related('category').prefetch_related('participants'),
-        'event_form': EventForm(),
-        'participant_form': ParticipantForm(),
-        'category_form': CategoryForm()
-    }
-    return render(request, 'events/organizer_dashboard.html', context)
+class OrganizerDashboardView(LoginRequiredMixin, TemplateView):
+    template_name = 'events/organizer_dashboard.html'
+    login_url = 'sign-in'
+    
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name='Organizer').exists():
+            messages.error(request, 'Access denied. Organizer privileges required.')
+            return redirect('dashboard-redirect')
+        return super().dispatch(request, *args, **kwargs)
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        today = date.today()
+        context.update({
+            'events': Event.objects.select_related('category').prefetch_related('participants').all().order_by('-date', '-time'),
+            'organized_events': Event.objects.select_related('category').prefetch_related('participants').all().order_by('-date', '-time'),
+            'participants': Participant.objects.prefetch_related('events').all(),
+            'categories': Category.objects.all(),
+            'total_participants': Participant.objects.aggregate(total=Count('id'))['total'],
+            'total_events': Event.objects.aggregate(total=Count('id'))['total'],
+            'total_categories': Category.objects.aggregate(total=Count('id'))['total'],
+            'upcoming_events_count': Event.objects.filter(date__gte=today).count(),
+            'past_events_count': Event.objects.filter(date__lt=today).count(),
+            'todays_events': Event.objects.filter(date=today).select_related('category').prefetch_related('participants'),
+            'event_form': EventForm(),
+            'participant_form': ParticipantForm(),
+            'category_form': CategoryForm()
+        })
+        return context
 
 
-#dashboard-view
-@login_required
-@group_required('Participant', 'Admin')
-def participant_dashboard(request):
-    rsvp_events = request.user.rsvp_events.all()
-    context = {
-        'rsvp_events': rsvp_events
-    }
-    return render(request, 'events/participant_dashboard.html', context)
+class ParticipantDashboardView(LoginRequiredMixin, TemplateView):
+    template_name = 'events/participant_dashboard.html'
+    login_url = 'sign-in'
+    
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name__in=['Participant', 'Admin']).exists():
+            messages.error(request, 'Access denied.')
+            return redirect('dashboard-redirect')
+        return super().dispatch(request, *args, **kwargs)
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['rsvp_events'] = self.request.user.rsvp_events.all()
+        return context
 
 
-# rspv-view
-@login_required(login_url='sign-in')
-def rsvp_event(request, event_id):
-    """Handle RSVP for an event"""
-    if request.method == 'POST':
+class RSVPEventView(LoginRequiredMixin, View):
+    login_url = 'sign-in'
+    
+    def post(self, request, event_id):
         event = get_object_or_404(Event, id=event_id)
         
         if event.is_past:
@@ -634,57 +657,97 @@ def rsvp_event(request, event_id):
                 messages.error(request, 'An error occurred while processing your RSVP. Please try again.')
 
         return redirect('event-detail', pk=event_id)
-    else:
+    
+    def get(self, request, event_id):
         return redirect('event-detail', pk=event_id)
 
 
-@login_required(login_url='sign-in')
-def my_rsvps(request):
-    """View for users to see their RSVPs"""
-    user_rsvps = RSVP.objects.filter(user=request.user, status='confirmed').select_related('event', 'event__category').order_by('-created_at')
-    context = {
-        'rsvps': user_rsvps,
-        'total_rsvps': user_rsvps.count()
-    }
-    return render(request, 'events/my_rsvps.html', context)
+class MyRSVPsView(LoginRequiredMixin, ListView):
+    template_name = 'events/my_rsvps.html'
+    context_object_name = 'rsvps'
+    login_url = 'sign-in'
+    
+    def get_queryset(self):
+        return RSVP.objects.filter(
+            user=self.request.user, 
+            status='confirmed'
+        ).select_related('event', 'event__category').order_by('-created_at')
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['total_rsvps'] = self.get_queryset().count()
+        return context
 
 
-@login_required(login_url='sign-in')
-@group_required('Admin', 'Organizer')
-def manage_rsvps(request):
-    """View for admins and organizers to manage all RSVPs"""
-    rsvps = RSVP.objects.select_related('user', 'event', 'event__category').order_by('-created_at')
-    context = {
-        'rsvps': rsvps,
-        'total_rsvps': rsvps.count(),
-        'confirmed_rsvps': rsvps.filter(status='confirmed').count(),
-        'cancelled_rsvps': rsvps.filter(status='cancelled').count(),
-    }
-    return render(request, 'events/manage_rsvps.html', context)
+class ManageRSVPsView(LoginRequiredMixin, ListView):
+    template_name = 'events/manage_rsvps.html'
+    context_object_name = 'rsvps'
+    login_url = 'sign-in'
+    
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name__in=['Admin', 'Organizer']).exists():
+            messages.error(request, 'Access denied. Admin or Organizer privileges required.')
+            return redirect('dashboard-redirect')
+        return super().dispatch(request, *args, **kwargs)
+    
+    def get_queryset(self):
+        return RSVP.objects.select_related('user', 'event', 'event__category').order_by('-created_at')
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        queryset = self.get_queryset()
+        context.update({
+            'total_rsvps': queryset.count(),
+            'confirmed_rsvps': queryset.filter(status='confirmed').count(),
+            'cancelled_rsvps': queryset.filter(status='cancelled').count(),
+        })
+        return context
 
 
-@login_required(login_url='sign-in')
-@group_required('Admin', 'Organizer')
-def event_rsvps(request, event_id):
-    """View RSVPs for a specific event"""
-    event = get_object_or_404(Event, id=event_id)
-    rsvps = RSVP.objects.filter(event=event).select_related('user').order_by('-created_at')
-    context = {
-        'event': event,
-        'rsvps': rsvps,
-        'confirmed_rsvps': rsvps.filter(status='confirmed'),
-        'cancelled_rsvps': rsvps.filter(status='cancelled'),
-        'total_rsvps': rsvps.filter(status='confirmed').count(),
-    }
-    return render(request, 'events/event_rsvps.html', context)
+class EventRSVPsView(LoginRequiredMixin, DetailView):
+    model = Event
+    template_name = 'events/event_rsvps.html'
+    context_object_name = 'event'
+    login_url = 'sign-in'
+    
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name__in=['Admin', 'Organizer']).exists():
+            messages.error(request, 'Access denied. Admin or Organizer privileges required.')
+            return redirect('dashboard-redirect')
+        return super().dispatch(request, *args, **kwargs)
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        rsvps = RSVP.objects.filter(event=self.object).select_related('user').order_by('-created_at')
+        context.update({
+            'rsvps': rsvps,
+            'confirmed_rsvps': rsvps.filter(status='confirmed'),
+            'cancelled_rsvps': rsvps.filter(status='cancelled'),
+            'total_rsvps': rsvps.filter(status='confirmed').count(),
+        })
+        return context
 
 
-@login_required(login_url='sign-in')
-@group_required('Admin', 'Organizer')
-def delete_rsvp(request, rsvp_id):
-    """Delete an RSVP (Admin/Organizer only)"""
-    if request.method == 'POST':
-        rsvp = get_object_or_404(RSVP, id=rsvp_id)
+class DeleteRSVPView(LoginRequiredMixin, DeleteView):
+    model = RSVP
+    success_url = reverse_lazy('manage-rsvps')
+    login_url = 'sign-in'
+    
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name__in=['Admin', 'Organizer']).exists():
+            messages.error(request, 'Access denied. Admin or Organizer privileges required.')
+            return redirect('dashboard-redirect')
+        return super().dispatch(request, *args, **kwargs)
+    
+    def get_object(self, queryset=None):
+        """Override to use rsvp_id instead of pk"""
+        rsvp_id = self.kwargs.get('rsvp_id')
+        if rsvp_id is None:
+            raise AttributeError("Generic detail view %s must be called with either an object pk or a slug in the URLconf." % self.__class__.__name__)
+        return get_object_or_404(RSVP, id=rsvp_id)
+    
+    def get(self, request, *args, **kwargs):
+        rsvp = self.get_object()
         event_id = rsvp.event.id
         user = rsvp.user
         
@@ -693,40 +756,50 @@ def delete_rsvp(request, rsvp_id):
         
         messages.success(request, f'RSVP for {user.username} has been removed.')
         return redirect('event-rsvps', event_id=event_id)
-    else:
-        return redirect('manage-rsvps')
 
 
-#RBA view
-@login_required(login_url='sign-in')
-@group_required('Admin')
-def rbac_dashboard(request):
-    """Main RBAC dashboard with user and group management"""
-    users = User.objects.select_related().prefetch_related('groups').all()
-    groups = Group.objects.all()
+class RBACDashboardView(LoginRequiredMixin, TemplateView):
+    template_name = 'events/rbac_dashboard.html'
+    login_url = 'sign-in'
     
-    #add-role
-    for user in users:
-        user_groups = user.groups.all()
-        if user_groups:
-            user.current_role = user_groups[0].name
-        else:
-            user.current_role = 'No Role'
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name='Admin').exists():
+            messages.error(request, 'Access denied. Admin privileges required.')
+            return redirect('dashboard-redirect')
+        return super().dispatch(request, *args, **kwargs)
     
-    context = {
-        'users': users,
-        'groups': groups,
-        'assign_role_form': AssignRoleForm(),
-        'create_group_form': CreateGroupForm(),
-    }
-    return render(request, 'events/rbac_dashboard.html', context)
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        users = User.objects.select_related().prefetch_related('groups').all()
+        groups = Group.objects.all()
+        
+        # Add role information to users
+        for user in users:
+            user_groups = user.groups.all()
+            if user_groups:
+                user.current_role = user_groups[0].name
+            else:
+                user.current_role = 'No Role'
+        
+        context.update({
+            'users': users,
+            'groups': groups,
+            'assign_role_form': AssignRoleForm(),
+            'create_group_form': CreateGroupForm(),
+        })
+        return context
 
 
-@login_required(login_url='sign-in')
-@group_required('Admin')
-def assign_user_role(request, user_id):
-    """Assign a role to a user"""
-    if request.method == 'POST':
+class AssignUserRoleView(LoginRequiredMixin, View):
+    login_url = 'sign-in'
+    
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name='Admin').exists():
+            messages.error(request, 'Access denied. Admin privileges required.')
+            return redirect('dashboard-redirect')
+        return super().dispatch(request, *args, **kwargs)
+    
+    def post(self, request, user_id):
         user = get_object_or_404(User, id=user_id)
         form = AssignRoleForm(request.POST)
         
@@ -734,7 +807,6 @@ def assign_user_role(request, user_id):
             role_name = form.cleaned_data['role']
             
             try:
-                #create-ggroup
                 role_group, created = Group.objects.get_or_create(name=role_name)
                 
                 user.groups.clear()
@@ -746,15 +818,20 @@ def assign_user_role(request, user_id):
                 messages.error(request, f'Error assigning role: {str(e)}')
         else:
             messages.error(request, 'Please select a valid role')
+        
+        return redirect('rbac-dashboard')
+
+
+class CreateGroupView(LoginRequiredMixin, View):
+    login_url = 'sign-in'
     
-    return redirect('rbac-dashboard')
-
-
-@login_required(login_url='sign-in')
-@group_required('Admin')
-def create_group(request):
-    """Create a new group"""
-    if request.method == 'POST':
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name='Admin').exists():
+            messages.error(request, 'Access denied. Admin privileges required.')
+            return redirect('dashboard-redirect')
+        return super().dispatch(request, *args, **kwargs)
+    
+    def post(self, request):
         form = CreateGroupForm(request.POST)
         
         if form.is_valid():
@@ -769,40 +846,70 @@ def create_group(request):
             for field, errors in form.errors.items():
                 for error in errors:
                     messages.error(request, f'{field}: {error}')
+        
+        return redirect('rbac-dashboard')
+
+
+class DeleteGroupView(LoginRequiredMixin, DeleteView):
+    model = Group
+    success_url = reverse_lazy('rbac-dashboard')
+    login_url = 'sign-in'
     
-    return redirect('rbac-dashboard')
-
-
-@login_required(login_url='sign-in')
-@group_required('Admin')
-def delete_group(request, group_id):
-    """Delete a group (except core groups)"""
-    group = get_object_or_404(Group, id=group_id)
-
-    core_groups = ['Admin', 'Organizer', 'Participant']
-    if group.name in core_groups:
-        messages.error(request, f'Cannot delete core group: {group.name}')
-    else:
-        group_name = group.name
-        group.delete()
-        messages.success(request, f'Successfully deleted group: {group_name}')
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name='Admin').exists():
+            messages.error(request, 'Access denied. Admin privileges required.')
+            return redirect('dashboard-redirect')
+        return super().dispatch(request, *args, **kwargs)
     
-    return redirect('rbac-dashboard')
+    def get_object(self, queryset=None):
+        """Override to use group_id instead of pk"""
+        group_id = self.kwargs.get('group_id')
+        if group_id is None:
+            raise AttributeError("Generic detail view %s must be called with either an object pk or a slug in the URLconf." % self.__class__.__name__)
+        return get_object_or_404(Group, id=group_id)
+    
+    def get(self, request, *args, **kwargs):
+        group = self.get_object()
+        
+        core_groups = ['Admin', 'Organizer', 'Participant']
+        if group.name in core_groups:
+            messages.error(request, f'Cannot delete core group: {group.name}')
+        else:
+            group_name = group.name
+            group.delete()
+            messages.success(request, f'Successfully deleted group: {group_name}')
+        
+        return redirect(self.success_url)
 
 
-@login_required(login_url='sign-in')
-@group_required('Admin')
-def delete_user(request, user_id):
-    """Delete a user (except current user and superusers)"""
-    user = get_object_or_404(User, id=user_id)
+class DeleteUserView(LoginRequiredMixin, DeleteView):
+    model = User
+    success_url = reverse_lazy('rbac-dashboard')
+    login_url = 'sign-in'
     
-    if user == request.user:
-        messages.error(request, 'Cannot delete your own account')
-    elif user.is_superuser:
-        messages.error(request, 'Cannot delete superuser accounts')
-    else:
-        username = user.username
-        user.delete()
-        messages.success(request, f'Successfully deleted user: {username}')
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name='Admin').exists():
+            messages.error(request, 'Access denied. Admin privileges required.')
+            return redirect('dashboard-redirect')
+        return super().dispatch(request, *args, **kwargs)
     
-    return redirect('rbac-dashboard')
+    def get_object(self, queryset=None):
+        """Override to use user_id instead of pk"""
+        user_id = self.kwargs.get('user_id')
+        if user_id is None:
+            raise AttributeError("Generic detail view %s must be called with either an object pk or a slug in the URLconf." % self.__class__.__name__)
+        return get_object_or_404(User, id=user_id)
+    
+    def get(self, request, *args, **kwargs):
+        user = self.get_object()
+        
+        if user == request.user:
+            messages.error(request, 'Cannot delete your own account')
+        elif user.is_superuser:
+            messages.error(request, 'Cannot delete superuser accounts')
+        else:
+            username = user.username
+            user.delete()
+            messages.success(request, f'Successfully deleted user: {username}')
+        
+        return redirect(self.success_url)

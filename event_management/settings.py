@@ -30,6 +30,7 @@ INSTALLED_APPS = [
     'events',
     "debug_toolbar",
     'core',
+    'users',
 ]
 
 MIDDLEWARE = [
@@ -129,13 +130,19 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# For development - emails will be printed to console
+# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+# For production - using Gmail SMTP
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = config('EMAIL_HOST')
-EMAIL_USE_TLS = config('EMAIL_USE_TLS', cast=bool)
-EMAIL_PORT = config('EMAIL_PORT')
+EMAIL_HOST = config('EMAIL_HOST', default='smtp.gmail.com')
+EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
+EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
 EMAIL_HOST_USER = config('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
 
+
+
 FRONTEND_URL = 'http://127.0.0.1:8000'
 
-LOGIN_URL = 'events:login'
+LOGIN_URL = 'sign-in'
