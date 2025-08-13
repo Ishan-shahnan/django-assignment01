@@ -1,15 +1,13 @@
-from django.shortcuts import render, redirect
-from django.contrib.auth.decorators import login_required
-from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
 from django.contrib.auth import update_session_auth_hash
-from django.contrib.auth.forms import PasswordChangeForm
-from django.views.generic import TemplateView, UpdateView
-from django.urls import reverse_lazy
-from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.shortcuts import render, redirect
+from django.urls import reverse_lazy
+from django.views.generic import TemplateView, UpdateView
+
 from .forms import UserProfileForm, CustomPasswordChangeForm
-from .models import UserProfile
+from .models import CustomUser, UserProfile
 
 
 @login_required
@@ -18,9 +16,8 @@ def profile_view(request):
     try:
         profile = request.user.profile
     except UserProfile.DoesNotExist:
-        # Create profile if it doesn't exist
         profile = UserProfile.objects.create(user=request.user)
-    
+
     context = {
         'profile': profile,
         'user': request.user,
@@ -35,7 +32,7 @@ def profile_edit(request):
         profile = request.user.profile
     except UserProfile.DoesNotExist:
         profile = UserProfile.objects.create(user=request.user)
-    
+
     if request.method == 'POST':
         form = UserProfileForm(request.POST, request.FILES, instance=profile)
         if form.is_valid():
@@ -46,7 +43,7 @@ def profile_edit(request):
             messages.error(request, 'Please correct the errors below.')
     else:
         form = UserProfileForm(instance=profile)
-    
+
     context = {
         'form': form,
         'profile': profile,
@@ -61,7 +58,7 @@ def change_password(request):
         form = CustomPasswordChangeForm(request.user, request.POST)
         if form.is_valid():
             user = form.save()
-            # Update the session to prevent the user from being logged out
+            
             update_session_auth_hash(request, user)
             messages.success(request, 'Your password was successfully updated!')
             return redirect('users:profile')
@@ -69,7 +66,7 @@ def change_password(request):
             messages.error(request, 'Please correct the errors below.')
     else:
         form = CustomPasswordChangeForm(request.user)
-    
+
     context = {
         'form': form,
     }
@@ -80,14 +77,14 @@ class ProfileView(LoginRequiredMixin, TemplateView):
     """Class-based view for profile display"""
     template_name = 'users/profile.html'
     login_url = 'sign-in'
-    
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         try:
             profile = self.request.user.profile
         except UserProfile.DoesNotExist:
             profile = UserProfile.objects.create(user=self.request.user)
-        
+
         context.update({
             'profile': profile,
             'user': self.request.user,
@@ -102,17 +99,17 @@ class ProfileEditView(LoginRequiredMixin, UpdateView):
     template_name = 'users/profile_edit.html'
     success_url = reverse_lazy('users:profile')
     login_url = 'sign-in'
-    
+
     def get_object(self, queryset=None):
         try:
             return self.request.user.profile
         except UserProfile.DoesNotExist:
             return UserProfile.objects.create(user=self.request.user)
-    
+
     def form_valid(self, form):
         messages.success(self.request, 'Profile updated successfully!')
         return super().form_valid(form)
-    
+
     def form_invalid(self, form):
         messages.error(self.request, 'Please correct the errors below.')
         return super().form_invalid(form)

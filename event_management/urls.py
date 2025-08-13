@@ -25,7 +25,7 @@ urlpatterns = [
     path('', include('events.urls')),
     path('users/', include('users.urls')),
     
-    # Django built-in password reset URLs
+    # Pass reset 
     path('password-reset/', auth_views.PasswordResetView.as_view(
         template_name='events/password_reset.html',
         email_template_name='events/password_reset_email.html',
@@ -42,7 +42,7 @@ urlpatterns = [
     ), name='password_reset_complete'),
 ]
 
-# Serve media files in development
+# Serve media 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     import debug_toolbar

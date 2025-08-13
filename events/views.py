@@ -15,6 +15,7 @@ from django.utils.http import urlsafe_base64_decode
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, TemplateView, View
 from django.contrib.auth.mixins import LoginRequiredMixin
 
+from users.models import CustomUser
 from .decorators import group_required
 from .forms import EventForm, ParticipantForm, CategoryForm, SignUpForm, SignInForm, AssignRoleForm, CreateGroupForm
 from .models import Event, Participant, Category, RSVP
@@ -221,9 +222,12 @@ class EventCreateView(CreateView):
         context['event_form'] = EventForm()
         context['participant_form'] = ParticipantForm()
         context['category_form'] = CategoryForm()
+        context['image_field'] = getattr(Event, 'image', None)
         return context
 
     def form_valid(self, form):
+        if 'image' in self.request.FILES:
+            form.instance.image = self.request.FILES['image']
         response = super().form_valid(form)
         messages.success(self.request, 'Event created successfully!')
         return response
@@ -491,7 +495,7 @@ class SignUpView(CreateView):
 class ActivateView(View):
     def get(self, request, user_id, token):
         try:
-            user = User.objects.get(id=user_id)
+            user = CustomUser.objects.get(id=user_id)
             if default_token_generator.check_token(user, token):
                 user.is_active = True
                 user.save()
@@ -520,12 +524,16 @@ class DashboardRedirectView(LoginRequiredMixin, View):
     login_url = 'sign-in'
     
     def get(self, request):
-        if request.user.groups.filter(name='Admin').exists():
+        user_groups = request.user.groups.values_list('name', flat=True)
+        if 'Admin' in user_groups:
             return redirect('admin-dashboard')
-        elif request.user.groups.filter(name='Organizer').exists():
+        elif 'Organizer' in user_groups:
             return redirect('organizer-dashboard')
-        else:
+        elif 'Participant' in user_groups:
             return redirect('participant-dashboard')
+        else:
+            messages.error(request, 'No role assigned. Please contact the administrator.')
+            return redirect('sign-in')
 
 
 class AdminDashboardView(LoginRequiredMixin, TemplateView):
@@ -770,10 +778,10 @@ class RBACDashboardView(LoginRequiredMixin, TemplateView):
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        users = User.objects.select_related().prefetch_related('groups').all()
+        users = CustomUser.objects.select_related().prefetch_related('groups').all()
         groups = Group.objects.all()
         
-        # Add role information to users
+        # Role info
         for user in users:
             user_groups = user.groups.all()
             if user_groups:
@@ -800,7 +808,7 @@ class AssignUserRoleView(LoginRequiredMixin, View):
         return super().dispatch(request, *args, **kwargs)
     
     def post(self, request, user_id):
-        user = get_object_or_404(User, id=user_id)
+        user = get_object_or_404(CustomUser, id=user_id)
         form = AssignRoleForm(request.POST)
         
         if form.is_valid():

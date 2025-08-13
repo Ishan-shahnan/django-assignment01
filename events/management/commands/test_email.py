@@ -4,6 +4,8 @@ from django.contrib.auth.models import User
 from django.contrib.auth.tokens import default_token_generator
 from django.conf import settings
 
+from users.models import CustomUser
+
 
 class Command(BaseCommand):
     help = 'Test email sending functionality (Based on SDT-Django-module-13)'
@@ -15,7 +17,7 @@ class Command(BaseCommand):
         test_email = options['email']
         
         
-        test_user, created = User.objects.get_or_create(
+        test_user, created = CustomUser.objects.get_or_create(
             username='test_user',
             defaults={
                 'email': test_email,

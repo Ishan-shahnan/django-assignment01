@@ -1,7 +1,7 @@
 from django import forms
-from django.contrib.auth.models import User
-from django.contrib.auth.forms import UserChangeForm, PasswordChangeForm
-from .models import UserProfile
+from django.contrib.auth.forms import PasswordChangeForm
+
+from .models import CustomUser
 
 
 class UserProfileForm(forms.ModelForm):
@@ -20,7 +20,7 @@ class UserProfileForm(forms.ModelForm):
     }))
 
     class Meta:
-        model = UserProfile
+        model = CustomUser
         fields = ['phone_number', 'profile_picture', 'bio', 'date_of_birth', 'address']
         widgets = {
             'phone_number': forms.TextInput(attrs={
@@ -53,9 +53,9 @@ class UserProfileForm(forms.ModelForm):
     def save(self, commit=True):
         profile = super().save(commit=False)
         if commit:
-            # Save the profile first
+
             profile.save()
-            # Update the user fields
+            
             user = profile.user
             user.first_name = self.cleaned_data['first_name']
             user.last_name = self.cleaned_data['last_name']
@@ -93,6 +93,6 @@ class CustomPasswordChangeForm(PasswordChangeForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Remove the help text for better UX
+        
         self.fields['new_password1'].help_text = ""
         self.fields['new_password2'].help_text = ""

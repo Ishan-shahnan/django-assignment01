@@ -1,21 +1,22 @@
 from django.db.models.signals import post_save, m2m_changed
 from django.dispatch import receiver
-from django.contrib.auth.models import User
 from django.core.mail import send_mail
 from django.contrib.auth.tokens import default_token_generator
 from django.conf import settings
+
+from users.models import CustomUser
 from .models import Event, RSVP
 
 
-@receiver(post_save, sender=User)
+@receiver(post_save, sender=CustomUser)
 def send_activation_email(sender, instance, created, **kwargs):
     if created and not instance.is_active:
         try:
-            #activation token
+            # activation token
             token = default_token_generator.make_token(instance)
-            
+
             activation_url = f"{settings.FRONTEND_URL}/activate/{instance.id}/{token}/"
-            
+
             subject = 'Activate Your Account - Shan Event Management'
             message = f"""Hi {instance.username},
 
@@ -29,7 +30,7 @@ If the link doesn't work, copy and paste it into your browser.
 Thank you!
 Shan Event Management Team"""
 
-            #send email
+            # send email
             send_mail(
                 subject=subject,
                 message=message,
@@ -37,9 +38,9 @@ Shan Event Management Team"""
                 recipient_list=[instance.email],
                 fail_silently=False,
             )
-            
+
             print(f'Activation email sent successfully to {instance.email}')
-            
+
         except Exception as e:
             print(f'Failed to send activation email to {instance.email}: {str(e)}')
 
@@ -51,7 +52,7 @@ def send_rsvp_confirmation_email(sender, instance, created, **kwargs):
         try:
             user = instance.user
             event = instance.event
-            
+
             if instance.status == 'confirmed':
                 # confirmation email
                 subject = f'RSVP Confirmation - {event.name}'
@@ -75,7 +76,7 @@ We look forward to seeing you at the event!
 
 Best regards,
 Shan Event Management Team"""
-            
+
             elif instance.status == 'cancelled':
                 subject = f'RSVP Cancellation - {event.name}'
                 message = f"""Hello {user.first_name or user.username},
@@ -101,9 +102,9 @@ Shan Event Management Team"""
                 recipient_list=[user.email],
                 fail_silently=False,
             )
-            
+
             print(f'RSVP {instance.status} email sent to {user.email}')
-            
+
         except Exception as e:
             print(f'Failed to send RSVP email: {str(e)}')
 
@@ -113,9 +114,9 @@ def send_legacy_rsvp_confirmation_email(sender, instance, action, pk_set, **kwar
     """Legacy signal for backward compatibility with old RSVP system"""
     if action == 'post_add':
         try:
-            
+
             user_pk = list(pk_set)[0]
-            user = User.objects.get(pk=user_pk)
+            user = CustomUser.objects.get(pk=user_pk)
 
             if not RSVP.objects.filter(user=user, event=instance).exists():
                 subject = f'RSVP Confirmation - {instance.name}'
@@ -139,8 +140,8 @@ Shan Event Management Team"""
                     recipient_list=[user.email],
                     fail_silently=False,
                 )
-                
+
                 print(f'Legacy RSVP confirmation email sent to {user.email}')
-            
+
         except Exception as e:
             print(f'Failed to send legacy RSVP confirmation email: {str(e)}')
