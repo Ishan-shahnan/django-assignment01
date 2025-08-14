@@ -136,7 +136,7 @@ class DashboardView(TemplateView):
         form_type = request.POST.get('form_type')
 
         if form_type == 'event':
-            form = EventForm(request.POST)
+            form = EventForm(request.POST, request.FILES)
             if form.is_valid():
                 form.save()
                 messages.success(request, 'Event created successfully!')
@@ -153,7 +153,7 @@ class DashboardView(TemplateView):
                 messages.error(request, error_message)
 
         elif form_type == 'participant':
-            form = ParticipantForm(request.POST)
+            form = ParticipantForm(request.POST, request.FILES)
             if form.is_valid():
                 form.save()
                 messages.success(request, 'Participant created successfully!')
@@ -170,7 +170,7 @@ class DashboardView(TemplateView):
                 messages.error(request, error_message)
 
         elif form_type == 'category':
-            form = CategoryForm(request.POST)
+            form = CategoryForm(request.POST, request.FILES)
             if form.is_valid():
                 form.save()
                 messages.success(request, 'Category created successfully!')
